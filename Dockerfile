@@ -4,15 +4,16 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-# Install dependencies first (cache layer)
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen
+# Install dependencies only (cache layer)
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-install-project
 
-# Copy source code
+# Copy source and install the project itself
 COPY src/ src/
 COPY tests/ tests/
 COPY alembic.ini ./
 COPY alembic/ alembic/
+RUN uv sync --frozen
 
 ENV PATH="/app/.venv/bin:$PATH"
 
