@@ -73,6 +73,23 @@ from uuid import uuid4
 
 - **Exception**: `import pytest` is already this pattern. Test decorators like `@pytest.fixture` and `@pytest.mark.asyncio` naturally follow.
 
+### Control Flow
+- **Always use explicit `else`** — never rely on implicit return after an `if` block
+- This makes both branches clearly visible and intentional
+
+```python
+# Good
+if account_type in DEBIT_NORMAL_TYPES:
+    return total_debits - total_credits
+else:
+    return total_credits - total_debits
+
+# Bad
+if account_type in DEBIT_NORMAL_TYPES:
+    return total_debits - total_credits
+return total_credits - total_debits
+```
+
 ## Documentation Guidelines
 
 When creating or updating documentation:

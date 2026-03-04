@@ -90,4 +90,5 @@ def calculate_balance(
 
     if account_type in DEBIT_NORMAL_TYPES:
         return total_debits - total_credits
-    return total_credits - total_debits
+    else:
+        return total_credits - total_debits
