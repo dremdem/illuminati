@@ -1,3 +1,5 @@
+"""Unit tests for transaction validation rules (double-entry bookkeeping)."""
+
 from decimal import Decimal
 from uuid import uuid4
 

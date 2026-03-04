@@ -1,3 +1,5 @@
+"""Unit tests for Account domain model creation and types."""
+
 from uuid import uuid4
 
 from ledger.domain.enums import AccountType

@@ -1,3 +1,5 @@
+"""Enumerations for account types and transaction entry directions."""
+
 from enum import StrEnum
 
 

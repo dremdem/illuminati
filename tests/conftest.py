@@ -1,3 +1,5 @@
+"""Shared test fixtures: app factory and async HTTP client."""
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 

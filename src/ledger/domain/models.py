@@ -1,3 +1,5 @@
+"""Domain entities: Account, Transaction, and TransactionEntry."""
+
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal

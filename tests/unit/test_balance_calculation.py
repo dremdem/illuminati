@@ -1,3 +1,5 @@
+"""Unit tests for balance calculation across all four account types."""
+
 from decimal import Decimal
 from uuid import uuid4
 

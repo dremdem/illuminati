@@ -1,3 +1,6 @@
+"""Domain-specific exceptions for business rule violations."""
+
+
 class DomainError(Exception):
     """Base exception for all domain-layer errors."""
 

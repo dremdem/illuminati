@@ -1,3 +1,5 @@
+"""Domain services: transaction validation and balance calculation."""
+
 from collections.abc import Sequence
 from decimal import Decimal
 
