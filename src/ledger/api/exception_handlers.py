@@ -40,6 +40,23 @@ async def duplicate_account_handler(
     )
 
 
+async def transaction_not_found_handler(
+    request: fastapi.Request,
+    exc: exceptions.TransactionNotFoundError,
+) -> fastapi.responses.JSONResponse:
+    """
+    Handle TransactionNotFoundError with a 404 response.
+
+    :param request: current request
+    :param exc: the raised exception
+    :return: JSON response with 404 status
+    """
+    return fastapi.responses.JSONResponse(
+        status_code=404,
+        content={"detail": str(exc)},
+    )
+
+
 async def domain_error_handler(
     request: fastapi.Request,
     exc: exceptions.DomainError,
@@ -73,6 +90,10 @@ def register_exception_handlers(app: fastapi.FastAPI) -> None:
     app.add_exception_handler(
         exceptions.DuplicateAccountError,
         duplicate_account_handler,  # type: ignore[arg-type]
+    )
+    app.add_exception_handler(
+        exceptions.TransactionNotFoundError,
+        transaction_not_found_handler,  # type: ignore[arg-type]
     )
     app.add_exception_handler(
         exceptions.DomainError,

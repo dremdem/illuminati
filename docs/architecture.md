@@ -65,7 +65,7 @@ The innermost layer. Pure Python with **zero external dependencies**.
 | `models.py` | `Account`, `Transaction`, `TransactionEntry` dataclasses |
 | `enums.py` | `AccountType` (ASSET, LIABILITY, REVENUE, EXPENSE), `EntryType` (DEBIT, CREDIT) |
 | `services.py` | `validate_transaction()`, `calculate_balance()` |
-| `exceptions.py` | `UnbalancedTransactionError`, `InvalidTransactionError`, `AccountNotFoundError`, etc. |
+| `exceptions.py` | `DomainError` base, `InvalidTransactionError`, `UnbalancedTransactionError`, `AccountNotFoundError`, `TransactionNotFoundError`, `DuplicateAccountError` |
 
 **Rules:**
 - No imports from `application`, `infrastructure`, or `api`
@@ -81,7 +81,7 @@ Orchestrates use cases by combining domain logic with repository calls.
 |---|---|
 | `interfaces.py` | Repository protocols (`AccountRepository`, `TransactionRepository`) using `typing.Protocol` |
 | `account_service.py` | `AccountService`: create account, get account with balance, list accounts. Returns `AccountWithBalance` DTO. |
-| `transaction_service.py` | *(planned)* Create transaction (validate + persist), get transaction, get by account |
+| `transaction_service.py` | `TransactionService`: create transaction (validate accounts + entries, persist), get by ID, get by account. Uses `EntryData` DTO. |
 
 **Rules:**
 - Depends on `domain` (uses entities and business rules)
@@ -114,9 +114,9 @@ Thin HTTP interface. No business logic.
 | Module | Purpose |
 |---|---|
 | `routers/accounts.py` | Account endpoints: `POST /api/accounts`, `GET /api/accounts`, `GET /api/accounts/{id}` |
-| `routers/transactions.py` | *(planned)* Transaction endpoints (`POST`, `GET /{id}`, `GET /accounts/{id}/transactions`) |
-| `schemas.py` | Pydantic v2 request/response models (`CreateAccountRequest`, `AccountResponse`) |
-| `dependencies.py` | FastAPI DI chain: `get_session` → `get_account_repository` / `get_transaction_repository` → `get_account_service` |
+| `routers/transactions.py` | Transaction endpoints: `POST /api/transactions`, `GET /api/transactions/{id}`, `GET /api/accounts/{id}/transactions` |
+| `schemas.py` | Pydantic v2 request/response models for accounts and transactions (with camelCase aliases) |
+| `dependencies.py` | FastAPI DI chain: `get_session` → repos → `get_account_service` / `get_transaction_service` |
 | `exception_handlers.py` | Maps domain exceptions to HTTP status codes (404, 409, 400) |
 
 **Rules:**
@@ -221,6 +221,7 @@ Domain exceptions are raised in the domain/application layers and translated to 
 | `UnbalancedTransactionError` | 400 Bad Request | sum(debits) != sum(credits) |
 | `InvalidTransactionError` | 400 Bad Request | < 2 entries, missing debit/credit, negative amount |
 | `AccountNotFoundError` | 404 Not Found | Referenced account doesn't exist |
+| `TransactionNotFoundError` | 404 Not Found | Referenced transaction doesn't exist |
 | `DuplicateAccountError` | 409 Conflict | Account name already taken |
 | `DomainError` (base) | 400 Bad Request | Catch-all for business rule violations (e.g., empty account name) |
 | `ValidationError` (Pydantic) | 422 Unprocessable Entity | Malformed request body |
