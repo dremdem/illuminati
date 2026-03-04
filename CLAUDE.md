@@ -32,6 +32,7 @@ This file provides guidance to Claude Code when working with this repository.
   - `:return` for the return value
 - **Every class** must have a description docstring
 - **Every module** must have a top-level docstring describing its purpose
+- **Blank line after module docstring** — separate the docstring from imports with one blank line
 - Format: reStructuredText style (`:param`, `:return`)
 
 Example:
