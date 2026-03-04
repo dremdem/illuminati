@@ -79,7 +79,7 @@ Orchestrates use cases by combining domain logic with repository calls.
 
 | Module | Purpose |
 |---|---|
-| `interfaces.py` | Abstract repository protocols (`AccountRepository`, `TransactionRepository`) |
+| `interfaces.py` | Repository protocols (`AccountRepository`, `TransactionRepository`) using `typing.Protocol` |
 | `account_service.py` | Create account, get account with balance, list accounts |
 | `transaction_service.py` | Create transaction (validate + persist), get transaction, get by account |
 
@@ -97,8 +97,9 @@ Implements persistence and external integrations.
 |---|---|
 | `database.py` | Async SQLAlchemy engine, session factory, `get_db()` |
 | `models.py` | SQLAlchemy ORM models (`AccountModel`, `TransactionModel`, `TransactionEntryModel`) |
-| `repositories/account_repo.py` | `SQLAlchemyAccountRepository` -- implements `AccountRepository` protocol |
-| `repositories/transaction_repo.py` | `SQLAlchemyTransactionRepository` -- implements `TransactionRepository` protocol |
+| `mappers.py` | Domain↔ORM conversion functions (handles `type`↔`account_type`/`entry_type` mapping) |
+| `repositories/account_repo.py` | `SqlaAccountRepository` -- implements `AccountRepository` protocol |
+| `repositories/transaction_repo.py` | `SqlaTransactionRepository` -- implements `TransactionRepository` protocol |
 
 **Rules:**
 - Implements interfaces defined in `application`
@@ -161,17 +162,18 @@ src/ledger/
 │   └── exceptions.py           # Domain-specific errors
 ├── application/                # MIDDLE - Use cases
 │   ├── __init__.py
-│   ├── interfaces.py           # Repository protocols (ABC/Protocol)
+│   ├── interfaces.py           # Repository protocols (typing.Protocol)
 │   ├── account_service.py      # Account use cases
 │   └── transaction_service.py  # Transaction use cases
 ├── infrastructure/             # OUTER - DB, ORM
 │   ├── __init__.py
 │   ├── database.py             # Engine, session, get_db()
 │   ├── models.py               # SQLAlchemy ORM models
+│   ├── mappers.py              # Domain ↔ ORM mappers
 │   └── repositories/
-│       ├── __init__.py
-│       ├── account_repo.py     # SQLAlchemyAccountRepository
-│       └── transaction_repo.py # SQLAlchemyTransactionRepository
+│       ├── __init__.py          # Re-exports SqlaAccountRepository, SqlaTransactionRepository
+│       ├── account_repo.py     # SqlaAccountRepository
+│       └── transaction_repo.py # SqlaTransactionRepository
 ├── api/                        # OUTER - HTTP
 │   ├── __init__.py
 │   ├── schemas.py              # Pydantic request/response models
