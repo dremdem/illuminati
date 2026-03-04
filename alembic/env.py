@@ -1,50 +1,71 @@
+"""Alembic migration environment configuration."""
+
+import logging.config
 import os
-from logging.config import fileConfig
 
-from alembic import context
-from sqlalchemy import engine_from_config, pool
+import alembic.context as alembic_context
+import sqlalchemy
+import sqlalchemy.pool as pool
 
-config = context.config
+import ledger.infrastructure.database as database
+import ledger.infrastructure.models as orm_models  # noqa: F401 — register models with Base
+
+config = alembic_context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    logging.config.fileConfig(config.config_file_name)
 
-# Override sqlalchemy.url from environment variable
-database_url = os.environ.get("DATABASE_URL", "")
-if database_url:
-    # Alembic needs sync driver; swap asyncpg -> psycopg2 for migrations
-    sync_url = database_url.replace("+asyncpg", "")
-    config.set_main_option("sqlalchemy.url", sync_url)
+# Use DATABASE_URL env var only when sqlalchemy.url is not already set
+# (tests pass the URL programmatically via config.set_main_option)
+existing_url = config.get_main_option("sqlalchemy.url")
+if not existing_url:
+    database_url = os.environ.get("DATABASE_URL", "")
+    if database_url:
+        # Alembic needs sync driver; swap asyncpg -> psycopg2 for migrations
+        sync_url = database_url.replace("+asyncpg", "")
+        config.set_main_option("sqlalchemy.url", sync_url)
 
-# Will be set to Base.metadata once ORM models are created (issue #5)
-target_metadata = None
+target_metadata = database.Base.metadata
 
 
 def run_migrations_offline() -> None:
+    """
+    Run migrations in offline mode using a URL instead of a live connection.
+
+    :return: None
+    """
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(
+    alembic_context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
-    with context.begin_transaction():
-        context.run_migrations()
+    with alembic_context.begin_transaction():
+        alembic_context.run_migrations()
 
 
 def run_migrations_online() -> None:
-    connectable = engine_from_config(
+    """
+    Run migrations in online mode using a live database connection.
+
+    :return: None
+    """
+    connectable = sqlalchemy.engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-        with context.begin_transaction():
-            context.run_migrations()
+        alembic_context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+        )
+        with alembic_context.begin_transaction():
+            alembic_context.run_migrations()
 
 
-if context.is_offline_mode():
+if alembic_context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()

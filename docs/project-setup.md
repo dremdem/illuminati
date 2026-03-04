@@ -30,6 +30,7 @@ The Financial Ledger API is a FastAPI application implementing double-entry book
 | ruff | Linting + formatting | 0.8+ |
 | mypy | Static type checking (strict) | 1.13+ |
 | pytest | Testing (async) | 8.0+ |
+| testcontainers | Disposable PostgreSQL for integration tests | 4.0+ |
 
 ## Project Structure
 
@@ -149,7 +150,7 @@ This means changing source code **does not** re-download dependencies.
 | `db` | postgres:16-alpine | 5432 | PostgreSQL with health check |
 | `app` | (built from Dockerfile) | 8000 | FastAPI application |
 
-The `app` service waits for `db` to be healthy before starting. Source directories (`src/`, `tests/`) are mounted as volumes for live reloading during development.
+The `app` service waits for `db` to be healthy before starting. Source directories (`src/`, `tests/`, `alembic/`) are mounted as volumes for live reloading during development. The Docker socket (`/var/run/docker.sock`) is also mounted so that testcontainers can spin up disposable PostgreSQL containers for integration tests.
 
 ### Running Commands Inside Docker
 
@@ -252,6 +253,7 @@ Alembic reads `DATABASE_URL` from the environment (not hardcoded in `alembic.ini
 
 ## Related Documents
 
-- [Architecture](./architecture.md) *(planned -- issue #3)*
-- [Domain Model](./domain-model.md) *(planned -- issue #3)*
-- [API Specification](./api-specification.md) *(planned -- issue #3)*
+- [Architecture](./architecture.md) -- clean architecture layers, dependency rules
+- [Domain Model](./domain-model.md) -- entities, balance rules, validation
+- [API Specification](./api-specification.md) -- endpoint contracts
+- [Development Guide](./development-guide.md) -- workflow, testing, migrations
