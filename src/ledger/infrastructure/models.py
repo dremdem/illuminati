@@ -7,10 +7,11 @@ import uuid
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 
+import ledger.domain.enums as enums
 import ledger.infrastructure.database as database
 
-ACCOUNT_TYPE_VALUES = ("ASSET", "LIABILITY", "REVENUE", "EXPENSE")
-ENTRY_TYPE_VALUES = ("DEBIT", "CREDIT")
+ACCOUNT_TYPE_VALUES = tuple(member.value for member in enums.AccountType)
+ENTRY_TYPE_VALUES = tuple(member.value for member in enums.EntryType)
 
 
 class AccountModel(database.Base):
@@ -28,7 +29,7 @@ class AccountModel(database.Base):
         unique=True,
         nullable=False,
     )
-    type: orm.Mapped[str] = orm.mapped_column(
+    account_type: orm.Mapped[str] = orm.mapped_column(
         sa.String,
         nullable=False,
     )
@@ -40,8 +41,8 @@ class AccountModel(database.Base):
 
     __table_args__ = (
         sa.CheckConstraint(
-            sa.column("type").in_(ACCOUNT_TYPE_VALUES),
-            name="ck_accounts_type",
+            sa.column("account_type").in_(ACCOUNT_TYPE_VALUES),
+            name="ck_accounts_account_type",
         ),
     )
 
@@ -98,7 +99,7 @@ class TransactionEntryModel(database.Base):
         nullable=False,
         index=True,
     )
-    type: orm.Mapped[str] = orm.mapped_column(
+    entry_type: orm.Mapped[str] = orm.mapped_column(
         sa.String,
         nullable=False,
     )
@@ -113,8 +114,8 @@ class TransactionEntryModel(database.Base):
 
     __table_args__ = (
         sa.CheckConstraint(
-            sa.column("type").in_(ENTRY_TYPE_VALUES),
-            name="ck_transaction_entries_type",
+            sa.column("entry_type").in_(ENTRY_TYPE_VALUES),
+            name="ck_transaction_entries_entry_type",
         ),
         sa.CheckConstraint(
             sa.column("amount") > 0,

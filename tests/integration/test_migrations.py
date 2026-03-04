@@ -84,7 +84,7 @@ class TestMigrations:
             account_cols = _get_table_columns(engine, "accounts")
             assert "id" in account_cols
             assert "name" in account_cols
-            assert "type" in account_cols
+            assert "account_type" in account_cols
             assert "created_at" in account_cols
 
             txn_cols = _get_table_columns(engine, "transactions")
@@ -97,7 +97,7 @@ class TestMigrations:
             assert "id" in entry_cols
             assert "transaction_id" in entry_cols
             assert "account_id" in entry_cols
-            assert "type" in entry_cols
+            assert "entry_type" in entry_cols
             assert "amount" in entry_cols
 
             engine.dispose()

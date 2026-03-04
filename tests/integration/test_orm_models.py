@@ -19,7 +19,7 @@ class TestAccountModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         db_session.add(account)
         await db_session.flush()
@@ -28,7 +28,7 @@ class TestAccountModel:
 
         assert result is not None
         assert result.name == "Cash"
-        assert result.type == "ASSET"
+        assert result.account_type == "ASSET"
         assert result.created_at is not None
 
     async def test_created_at_default(self, db_session: sa_async.AsyncSession) -> None:
@@ -36,7 +36,7 @@ class TestAccountModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Revenue",
-            type="REVENUE",
+            account_type="REVENUE",
         )
         db_session.add(account)
         await db_session.flush()
@@ -51,12 +51,12 @@ class TestAccountModel:
         account_1 = models.AccountModel(
             id=uuid.uuid4(),
             name="Duplicate",
-            type="ASSET",
+            account_type="ASSET",
         )
         account_2 = models.AccountModel(
             id=uuid.uuid4(),
             name="Duplicate",
-            type="LIABILITY",
+            account_type="LIABILITY",
         )
         db_session.add(account_1)
         await db_session.flush()
@@ -70,18 +70,21 @@ class TestAccountModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name=None,  # type: ignore[arg-type]
-            type="ASSET",
+            account_type="ASSET",
         )
         db_session.add(account)
         with pytest.raises(sa_exc.IntegrityError):
             await db_session.flush()
 
-    async def test_type_not_null(self, db_session: sa_async.AsyncSession) -> None:
+    async def test_account_type_not_null(
+        self,
+        db_session: sa_async.AsyncSession,
+    ) -> None:
         """Account type must not be null."""
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="NoType",
-            type=None,  # type: ignore[arg-type]
+            account_type=None,  # type: ignore[arg-type]
         )
         db_session.add(account)
         with pytest.raises(sa_exc.IntegrityError):
@@ -95,7 +98,7 @@ class TestAccountModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="BadType",
-            type="INVALID",
+            account_type="INVALID",
         )
         db_session.add(account)
         with pytest.raises(sa_exc.IntegrityError):
@@ -147,7 +150,7 @@ class TestTransactionEntryModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         txn = models.TransactionModel(
             id=uuid.uuid4(),
@@ -161,7 +164,7 @@ class TestTransactionEntryModel:
             id=uuid.uuid4(),
             transaction_id=txn.id,
             account_id=account.id,
-            type="DEBIT",
+            entry_type="DEBIT",
             amount=decimal.Decimal("100.00"),
         )
         db_session.add(entry)
@@ -171,7 +174,7 @@ class TestTransactionEntryModel:
 
         assert result is not None
         assert result.amount == decimal.Decimal("100.00")
-        assert result.type == "DEBIT"
+        assert result.entry_type == "DEBIT"
         assert result.transaction_id == txn.id
         assert result.account_id == account.id
 
@@ -183,7 +186,7 @@ class TestTransactionEntryModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         txn = models.TransactionModel(
             id=uuid.uuid4(),
@@ -197,7 +200,7 @@ class TestTransactionEntryModel:
             id=uuid.uuid4(),
             transaction_id=txn.id,
             account_id=account.id,
-            type="WRONG",
+            entry_type="WRONG",
             amount=decimal.Decimal("50.00"),
         )
         db_session.add(entry)
@@ -212,7 +215,7 @@ class TestTransactionEntryModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         txn = models.TransactionModel(
             id=uuid.uuid4(),
@@ -226,7 +229,7 @@ class TestTransactionEntryModel:
             id=uuid.uuid4(),
             transaction_id=txn.id,
             account_id=account.id,
-            type="DEBIT",
+            entry_type="DEBIT",
             amount=decimal.Decimal("-10.00"),
         )
         db_session.add(entry)
@@ -241,7 +244,7 @@ class TestTransactionEntryModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         txn = models.TransactionModel(
             id=uuid.uuid4(),
@@ -255,7 +258,7 @@ class TestTransactionEntryModel:
             id=uuid.uuid4(),
             transaction_id=txn.id,
             account_id=account.id,
-            type="DEBIT",
+            entry_type="DEBIT",
             amount=decimal.Decimal("0"),
         )
         db_session.add(entry)
@@ -270,7 +273,7 @@ class TestTransactionEntryModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         db_session.add(account)
         await db_session.flush()
@@ -279,7 +282,7 @@ class TestTransactionEntryModel:
             id=uuid.uuid4(),
             transaction_id=uuid.uuid4(),
             account_id=account.id,
-            type="DEBIT",
+            entry_type="DEBIT",
             amount=decimal.Decimal("50.00"),
         )
         db_session.add(entry)
@@ -303,7 +306,7 @@ class TestTransactionEntryModel:
             id=uuid.uuid4(),
             transaction_id=txn.id,
             account_id=uuid.uuid4(),
-            type="CREDIT",
+            entry_type="CREDIT",
             amount=decimal.Decimal("25.00"),
         )
         db_session.add(entry)
@@ -318,7 +321,7 @@ class TestTransactionEntryModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         txn = models.TransactionModel(
             id=uuid.uuid4(),
@@ -332,7 +335,7 @@ class TestTransactionEntryModel:
             id=uuid.uuid4(),
             transaction_id=txn.id,
             account_id=account.id,
-            type="DEBIT",
+            entry_type="DEBIT",
             amount=decimal.Decimal("75.00"),
         )
         db_session.add(entry)
@@ -353,7 +356,7 @@ class TestTransactionEntryModel:
         account = models.AccountModel(
             id=uuid.uuid4(),
             name="Cash",
-            type="ASSET",
+            account_type="ASSET",
         )
         txn = models.TransactionModel(
             id=uuid.uuid4(),
@@ -363,7 +366,7 @@ class TestTransactionEntryModel:
         entry = models.TransactionEntryModel(
             id=uuid.uuid4(),
             account_id=account.id,
-            type="DEBIT",
+            entry_type="DEBIT",
             amount=decimal.Decimal("200.00"),
         )
         txn.entries.append(entry)
