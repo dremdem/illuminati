@@ -10,7 +10,7 @@
 
 | Document | Description |
 |---|---|
-| [Architecture](./architecture.md) | Clean architecture layers, dependency rules, request flow sequence diagram, error handling strategy |
+| [Architecture](./architecture.md) | Clean architecture layers, dependency rules, repository pattern, domain↔ORM mappers, request flow sequence diagram, error handling strategy |
 | [Project Setup](./project-setup.md) | Tech stack, project structure, Docker setup, CI pipeline, Makefile targets, configuration files |
 
 ## API & Domain

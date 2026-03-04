@@ -49,7 +49,10 @@ illuminati/
 │   ├── application/            # Service/use-case layer
 │   ├── domain/                 # Business rules, entities (zero dependencies)
 │   ├── infrastructure/         # DB, ORM, external concerns
+│   │   ├── mappers.py          # Domain ↔ ORM conversion functions
 │   │   └── repositories/
+│   │       ├── account_repo.py
+│   │       └── transaction_repo.py
 │   └── main.py                 # App factory + health endpoint
 ├── tests/
 │   ├── unit/                   # Domain logic tests (no DB, no HTTP)
