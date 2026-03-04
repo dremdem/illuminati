@@ -127,11 +127,11 @@ Different account types respond differently to debits and credits. This is the c
 
 ```mermaid
 graph LR
-    subgraph "Debit-Normal (balance = debits - credits)"
+    subgraph "Debit-Normal"
         A[ASSET]
         E[EXPENSE]
     end
-    subgraph "Credit-Normal (balance = credits - debits)"
+    subgraph "Credit-Normal"
         L[LIABILITY]
         R[REVENUE]
     end
