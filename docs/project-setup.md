@@ -53,12 +53,12 @@ illuminati/
 │   │   └── repositories/
 │   │       ├── account_repo.py
 │   │       └── transaction_repo.py
-│   └── main.py                 # App factory + health endpoint
+│   └── main.py                 # App factory with lifespan, routers, exception handlers
 ├── tests/
 │   ├── unit/                   # Domain logic tests (no DB, no HTTP)
 │   ├── integration/            # Repository tests (testcontainers + real PG)
 │   ├── api/                    # Endpoint tests (httpx AsyncClient)
-│   ├── conftest.py             # Shared fixtures (app factory, async client)
+│   ├── conftest.py             # Shared fixtures (app, client, DB: testcontainers, engine, session)
 │   └── test_health.py          # Smoke test
 ├── alembic.ini                 # Alembic configuration
 ├── docker-compose.yml          # App + PostgreSQL services
