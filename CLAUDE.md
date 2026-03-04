@@ -32,3 +32,4 @@ When creating or updating documentation:
 3. **Cross-References**: Link to related documents where applicable
 4. **Code Examples**: Include runnable examples where possible
 5. **Keep Updated**: Update docs when code changes
+6. **Doc Navigator**: When adding or updating docs, always update [`docs/README.md`](docs/README.md) to reflect the change

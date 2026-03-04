@@ -69,9 +69,9 @@ illuminati/
 
 ```mermaid
 graph TD
-    A[API Layer<br/>FastAPI Routers] -->|calls| B[Application Layer<br/>Services / Use Cases]
-    B -->|uses| C[Domain Layer<br/>Entities, Business Rules]
-    B -->|uses| D[Infrastructure Layer<br/>Repositories, ORM, DB]
+    A["API Layer"] -->|calls| B["Application Layer"]
+    B -->|uses| C["Domain Layer"]
+    B -->|uses| D["Infrastructure Layer"]
     D -->|maps to/from| C
 
     style A fill:#4a9eff,color:#fff
@@ -176,9 +176,9 @@ GitHub Actions runs **3 parallel jobs** on every push to `master` and every PR:
 
 ```mermaid
 graph LR
-    T[Push / PR] --> L[lint<br/>ruff check + format]
-    T --> TC[typecheck<br/>mypy strict]
-    T --> TE[test<br/>pytest + PostgreSQL]
+    T[Push / PR] --> L["lint: ruff"]
+    T --> TC["typecheck: mypy"]
+    T --> TE["test: pytest + PG"]
 
     style L fill:#27ae60,color:#fff
     style TC fill:#2980b9,color:#fff
