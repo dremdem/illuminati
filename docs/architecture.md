@@ -80,8 +80,8 @@ Orchestrates use cases by combining domain logic with repository calls.
 | Module | Purpose |
 |---|---|
 | `interfaces.py` | Repository protocols (`AccountRepository`, `TransactionRepository`) using `typing.Protocol` |
-| `account_service.py` | Create account, get account with balance, list accounts |
-| `transaction_service.py` | Create transaction (validate + persist), get transaction, get by account |
+| `account_service.py` | `AccountService`: create account, get account with balance, list accounts. Returns `AccountWithBalance` DTO. |
+| `transaction_service.py` | *(planned)* Create transaction (validate + persist), get transaction, get by account |
 
 **Rules:**
 - Depends on `domain` (uses entities and business rules)
@@ -113,11 +113,11 @@ Thin HTTP interface. No business logic.
 
 | Module | Purpose |
 |---|---|
-| `routers/accounts.py` | Account endpoints (`POST`, `GET /`, `GET /{id}`) |
-| `routers/transactions.py` | Transaction endpoints (`POST`, `GET /{id}`, `GET /accounts/{id}/transactions`) |
-| `schemas.py` | Pydantic v2 request/response models |
-| `dependencies.py` | FastAPI dependency injection (service + repo wiring) |
-| `exception_handlers.py` | Maps domain exceptions to HTTP status codes |
+| `routers/accounts.py` | Account endpoints: `POST /api/accounts`, `GET /api/accounts`, `GET /api/accounts/{id}` |
+| `routers/transactions.py` | *(planned)* Transaction endpoints (`POST`, `GET /{id}`, `GET /accounts/{id}/transactions`) |
+| `schemas.py` | Pydantic v2 request/response models (`CreateAccountRequest`, `AccountResponse`) |
+| `dependencies.py` | FastAPI DI chain: `get_session` → `get_account_repository` / `get_transaction_repository` → `get_account_service` |
+| `exception_handlers.py` | Maps domain exceptions to HTTP status codes (404, 409, 400) |
 
 **Rules:**
 - Route handlers are thin -- validate input, call service, return response
@@ -183,7 +183,7 @@ src/ledger/
 │       ├── __init__.py
 │       ├── accounts.py         # /api/accounts
 │       └── transactions.py     # /api/transactions
-└── main.py                     # App factory
+└── main.py                     # App factory with async lifespan (DB engine/session)
 ```
 
 ## Request Flow
@@ -222,6 +222,7 @@ Domain exceptions are raised in the domain/application layers and translated to 
 | `InvalidTransactionError` | 400 Bad Request | < 2 entries, missing debit/credit, negative amount |
 | `AccountNotFoundError` | 404 Not Found | Referenced account doesn't exist |
 | `DuplicateAccountError` | 409 Conflict | Account name already taken |
+| `DomainError` (base) | 400 Bad Request | Catch-all for business rule violations (e.g., empty account name) |
 | `ValidationError` (Pydantic) | 422 Unprocessable Entity | Malformed request body |
 
 ## Related Documents
