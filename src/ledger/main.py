@@ -1,15 +1,15 @@
 """FastAPI application factory and entry point."""
 
-from fastapi import FastAPI
+import fastapi
 
 
-def create_app() -> FastAPI:
+def create_app() -> fastapi.FastAPI:
     """
     Create and configure the FastAPI application instance.
 
     :return: configured FastAPI app with routers and middleware
     """
-    app = FastAPI(
+    app = fastapi.FastAPI(
         title="Financial Ledger API",
         description="Double-entry bookkeeping financial ledger system",
         version="0.1.0",

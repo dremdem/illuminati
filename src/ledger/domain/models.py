@@ -1,38 +1,38 @@
 """Domain entities: Account, Transaction, and TransactionEntry."""
 
-from dataclasses import dataclass
-from datetime import datetime
-from decimal import Decimal
-from uuid import UUID
+import dataclasses
+import datetime
+import decimal
+import uuid
 
-from ledger.domain.enums import AccountType, EntryType
+import ledger.domain.enums as enums
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class Account:
     """Financial account (e.g., Cash, Revenue). Balance is computed, never stored."""
 
-    id: UUID
+    id: uuid.UUID
     name: str
-    type: AccountType
+    type: enums.AccountType
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class TransactionEntry:
     """A single debit or credit leg within a transaction."""
 
-    id: UUID
-    transaction_id: UUID
-    account_id: UUID
-    type: EntryType
-    amount: Decimal
+    id: uuid.UUID
+    transaction_id: uuid.UUID
+    account_id: uuid.UUID
+    type: enums.EntryType
+    amount: decimal.Decimal
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class Transaction:
     """A financial event moving money between accounts via balanced entries."""
 
-    id: UUID
-    timestamp: datetime
+    id: uuid.UUID
+    timestamp: datetime.datetime
     description: str
     entries: list[TransactionEntry]

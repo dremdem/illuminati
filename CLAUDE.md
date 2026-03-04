@@ -37,7 +37,7 @@ This file provides guidance to Claude Code when working with this repository.
 Example:
 ```python
 def validate_transaction_entries(
-    entries: Sequence[TransactionEntry],
+    entries: collections.abc.Sequence[models.TransactionEntry],
     description: str,
 ) -> None:
     """
@@ -49,6 +49,29 @@ def validate_transaction_entries(
     :raises UnbalancedTransactionError: if total debits != total credits
     """
 ```
+
+### Imports
+- **Use `import <module>` or `import <module> as <alias>`** instead of `from <module> import <name>`
+- This keeps the namespace explicit and reduces multi-line import blocks
+
+```python
+# Good
+import ledger.domain.enums as enums
+import ledger.domain.models as models
+import decimal
+import uuid
+
+account = models.Account(id=uuid.uuid4(), name="Cash", type=enums.AccountType.ASSET)
+amount = decimal.Decimal("100.00")
+
+# Bad
+from ledger.domain.enums import AccountType, EntryType
+from ledger.domain.models import Account, TransactionEntry
+from decimal import Decimal
+from uuid import uuid4
+```
+
+- **Exception**: `import pytest` is already this pattern. Test decorators like `@pytest.fixture` and `@pytest.mark.asyncio` naturally follow.
 
 ## Documentation Guidelines
 

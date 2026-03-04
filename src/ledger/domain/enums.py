@@ -1,9 +1,9 @@
 """Enumerations for account types and transaction entry directions."""
 
-from enum import StrEnum
+import enum
 
 
-class AccountType(StrEnum):
+class AccountType(enum.StrEnum):
     """Financial account classification determining balance calculation direction."""
 
     ASSET = "ASSET"
@@ -12,7 +12,7 @@ class AccountType(StrEnum):
     EXPENSE = "EXPENSE"
 
 
-class EntryType(StrEnum):
+class EntryType(enum.StrEnum):
     """Transaction entry direction: debit or credit."""
 
     DEBIT = "DEBIT"
