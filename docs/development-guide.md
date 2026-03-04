@@ -40,8 +40,8 @@ curl http://localhost:8000/health
 
 ```mermaid
 graph LR
-    I[Issue] --> B[Branch<br/>feature/*]
-    B --> T[TDD<br/>tests first]
+    I[Issue] --> B["Branch: feature/*"]
+    B --> T["TDD: tests first"]
     T --> IMPL[Implement]
     IMPL --> PR[Pull Request]
     PR --> CI[CI Green]
@@ -110,8 +110,8 @@ We follow Test-Driven Development. For every feature:
 
 ```mermaid
 graph TD
-    R[RED<br/>Write failing test] --> G[GREEN<br/>Write minimal code to pass]
-    G --> RF[REFACTOR<br/>Clean up, keep tests green]
+    R["RED: Write failing test"] --> G["GREEN: Make it pass"]
+    G --> RF["REFACTOR: Clean up"]
     RF --> R
 
     style R fill:#e74c3c,color:#fff

@@ -31,17 +31,12 @@ The domain layer is the core of the application. It knows nothing about database
 
 ```mermaid
 graph TB
-    subgraph "Outer Layers"
-        API["API Layer<br/>(FastAPI Routers, Pydantic Schemas)"]
-        INFRA["Infrastructure Layer<br/>(SQLAlchemy Models, Repositories, DB)"]
-    end
+    API["API Layer"]
+    APP["Application Layer"]
+    DOMAIN["Domain Layer"]
+    INFRA["Infrastructure Layer"]
 
-    subgraph "Inner Layers"
-        APP["Application Layer<br/>(Services / Use Cases)"]
-        DOMAIN["Domain Layer<br/>(Entities, Business Rules, Exceptions)"]
-    end
-
-    API -->|"HTTP → Service call"| APP
+    API -->|"HTTP to Service call"| APP
     APP -->|"uses business rules"| DOMAIN
     APP -->|"calls via interface"| INFRA
     INFRA -->|"maps to/from"| DOMAIN
@@ -51,6 +46,13 @@ graph TB
     style API fill:#4a9eff,color:#fff
     style INFRA fill:#7d5fff,color:#fff
 ```
+
+| Layer | Contains |
+|---|---|
+| **API** (blue) | FastAPI Routers, Pydantic Schemas |
+| **Application** (orange) | Services, Use Cases |
+| **Domain** (red) | Entities, Business Rules, Exceptions |
+| **Infrastructure** (purple) | SQLAlchemy Models, Repositories, DB |
 
 ## Layer Responsibilities
 
@@ -189,10 +191,10 @@ Example: `POST /api/transactions` (creating a balanced transaction)
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant R as Router<br/>(API Layer)
-    participant S as TransactionService<br/>(Application Layer)
-    participant D as Domain Services<br/>(Domain Layer)
-    participant Repo as TransactionRepo<br/>(Infrastructure)
+    participant R as Router
+    participant S as Service
+    participant D as Domain
+    participant Repo as Repository
     participant DB as PostgreSQL
 
     C->>R: POST /api/transactions
