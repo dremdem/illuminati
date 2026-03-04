@@ -53,11 +53,10 @@ class TestAccountCreation:
         assert account.id == account_id
 
     def test_all_account_types_are_valid(self) -> None:
-        """Verify all four account types exist."""
-        valid_types = {
+        """Verify AccountType enum has exactly the four expected types."""
+        assert set(enums.AccountType) == {
             enums.AccountType.ASSET,
             enums.AccountType.LIABILITY,
             enums.AccountType.REVENUE,
             enums.AccountType.EXPENSE,
         }
-        assert len(valid_types) == 4
