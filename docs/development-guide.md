@@ -140,14 +140,16 @@ For each feature (e.g., "create transaction"):
 
 ## Running Tests
 
+> **Note:** Integration tests use [testcontainers](https://testcontainers.com/) to spin up disposable PostgreSQL containers. This requires Docker socket access, which is provided by the `docker-compose.yml` volume mount (`/var/run/docker.sock`). Unit tests have no DB dependency and can run with `--no-deps`.
+
 ```bash
 # All tests
 docker compose run --rm app pytest -v
 
-# Unit tests only
+# Unit tests only (no DB needed)
 docker compose run --rm --no-deps app pytest tests/unit/ -v
 
-# Integration tests only
+# Integration tests only (needs Docker socket for testcontainers)
 docker compose run --rm app pytest tests/integration/ -v
 
 # API tests only
