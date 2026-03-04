@@ -8,6 +8,7 @@ import fastapi
 
 import ledger.api.exception_handlers as exception_handlers
 import ledger.api.routers.accounts as accounts_router
+import ledger.api.routers.transactions as transactions_router
 import ledger.infrastructure.database as database
 
 
@@ -46,6 +47,8 @@ def create_app() -> fastapi.FastAPI:
 
     exception_handlers.register_exception_handlers(app)
     app.include_router(accounts_router.router)
+    app.include_router(transactions_router.router)
+    app.include_router(transactions_router.account_transactions_router)
 
     @app.get("/health")
     async def health() -> dict[str, str]:

@@ -7,6 +7,7 @@ import fastapi
 import sqlalchemy.ext.asyncio as sa_async
 
 import ledger.application.account_service as account_service
+import ledger.application.transaction_service as transaction_service
 import ledger.infrastructure.repositories.account_repo as account_repo
 import ledger.infrastructure.repositories.transaction_repo as transaction_repo
 
@@ -76,6 +77,29 @@ def get_account_service(
     :return: account service instance
     """
     return account_service.AccountService(
+        account_repo=account_repository,
+        transaction_repo=transaction_repository,
+    )
+
+
+def get_transaction_service(
+    account_repository: typing.Annotated[
+        account_repo.SqlaAccountRepository,
+        fastapi.Depends(get_account_repository),
+    ],
+    transaction_repository: typing.Annotated[
+        transaction_repo.SqlaTransactionRepository,
+        fastapi.Depends(get_transaction_repository),
+    ],
+) -> transaction_service.TransactionService:
+    """
+    Build a transaction service wired with repositories.
+
+    :param account_repository: account repository instance
+    :param transaction_repository: transaction repository instance
+    :return: transaction service instance
+    """
+    return transaction_service.TransactionService(
         account_repo=account_repository,
         transaction_repo=transaction_repository,
     )

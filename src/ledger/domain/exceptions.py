@@ -19,3 +19,7 @@ class AccountNotFoundError(DomainError):
 
 class DuplicateAccountError(DomainError):
     """Raised when creating an account with a name that already exists."""
+
+
+class TransactionNotFoundError(DomainError):
+    """Raised when a referenced transaction does not exist."""
