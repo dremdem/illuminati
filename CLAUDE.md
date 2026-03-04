@@ -23,6 +23,74 @@ This file provides guidance to Claude Code when working with this repository.
 - Integration tests: repository layer (testcontainers + real PostgreSQL)
 - API tests: full endpoint tests (httpx + TestClient)
 
+## Style Guide
+
+### Docstrings
+- **Every function/method** must have a docstring with:
+  - Description of what it does
+  - `:param` for each parameter
+  - `:return` for the return value
+- **Every class** must have a description docstring
+- **Every module** must have a top-level docstring describing its purpose
+- **Blank line after module docstring** — separate the docstring from imports with one blank line
+- Format: reStructuredText style (`:param`, `:return`)
+
+Example:
+```python
+def validate_transaction_entries(
+    entries: collections.abc.Sequence[models.TransactionEntry],
+    description: str,
+) -> None:
+    """
+    Validate transaction entries against double-entry bookkeeping rules.
+
+    :param entries: list of debit/credit entries to validate
+    :param description: human-readable transaction description
+    :raises InvalidTransactionError: if entries violate structural rules
+    :raises UnbalancedTransactionError: if total debits != total credits
+    """
+```
+
+### Imports
+- **Use `import <module>` or `import <module> as <alias>`** instead of `from <module> import <name>`
+- This keeps the namespace explicit and reduces multi-line import blocks
+
+```python
+# Good
+import ledger.domain.enums as enums
+import ledger.domain.models as models
+import decimal
+import uuid
+
+account = models.Account(id=uuid.uuid4(), name="Cash", type=enums.AccountType.ASSET)
+amount = decimal.Decimal("100.00")
+
+# Bad
+from ledger.domain.enums import AccountType, EntryType
+from ledger.domain.models import Account, TransactionEntry
+from decimal import Decimal
+from uuid import uuid4
+```
+
+- **Exception**: `import pytest` is already this pattern. Test decorators like `@pytest.fixture` and `@pytest.mark.asyncio` naturally follow.
+
+### Control Flow
+- **Always use explicit `else`** — never rely on implicit return after an `if` block
+- This makes both branches clearly visible and intentional
+
+```python
+# Good
+if account_type in DEBIT_NORMAL_TYPES:
+    return total_debits - total_credits
+else:
+    return total_credits - total_debits
+
+# Bad
+if account_type in DEBIT_NORMAL_TYPES:
+    return total_debits - total_credits
+return total_credits - total_debits
+```
+
 ## Documentation Guidelines
 
 When creating or updating documentation:
