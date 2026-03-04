@@ -1,11 +1,13 @@
 """SQLAlchemy-based account repository implementation."""
 
+import decimal
 import uuid
 
 import sqlalchemy as sa
 import sqlalchemy.exc as sa_exc
 import sqlalchemy.ext.asyncio as sa_async
 
+import ledger.domain.enums as enums
 import ledger.domain.exceptions as exceptions
 import ledger.domain.models as models
 import ledger.infrastructure.mappers as mappers
@@ -75,3 +77,131 @@ class SqlaAccountRepository:
         stmt = sa.select(sa.exists().where(orm_models.AccountModel.id == account_id))
         result = await self._session.execute(stmt)
         return bool(result.scalar())
+
+    async def get_with_balance(
+        self, account_id: uuid.UUID
+    ) -> tuple[models.Account, decimal.Decimal] | None:
+        """
+        Retrieve an account with its computed balance via SQL aggregation.
+
+        :param account_id: UUID of the account
+        :return: tuple of (account, balance), or None if not found
+        """
+        stmt = (
+            sa.select(
+                orm_models.AccountModel.id,
+                orm_models.AccountModel.name,
+                orm_models.AccountModel.account_type,
+                self._balance_expression(),
+            )
+            .outerjoin(
+                orm_models.TransactionEntryModel,
+                orm_models.TransactionEntryModel.account_id
+                == orm_models.AccountModel.id,
+            )
+            .where(orm_models.AccountModel.id == account_id)
+            .group_by(
+                orm_models.AccountModel.id,
+                orm_models.AccountModel.name,
+                orm_models.AccountModel.account_type,
+            )
+        )
+        result = await self._session.execute(stmt)
+        row = result.one_or_none()
+        if row is None:
+            return None
+        else:
+            account = models.Account(
+                id=row.id,
+                name=row.name,
+                type=enums.AccountType(row.account_type),
+            )
+            return account, row.balance
+
+    async def get_all_with_balances(
+        self,
+    ) -> list[tuple[models.Account, decimal.Decimal]]:
+        """
+        Retrieve all accounts with their computed balances via SQL aggregation.
+
+        :return: list of (account, balance) tuples
+        """
+        stmt = (
+            sa.select(
+                orm_models.AccountModel.id,
+                orm_models.AccountModel.name,
+                orm_models.AccountModel.account_type,
+                self._balance_expression(),
+            )
+            .outerjoin(
+                orm_models.TransactionEntryModel,
+                orm_models.TransactionEntryModel.account_id
+                == orm_models.AccountModel.id,
+            )
+            .group_by(
+                orm_models.AccountModel.id,
+                orm_models.AccountModel.name,
+                orm_models.AccountModel.account_type,
+            )
+        )
+        result = await self._session.execute(stmt)
+        return [
+            (
+                models.Account(
+                    id=row.id,
+                    name=row.name,
+                    type=enums.AccountType(row.account_type),
+                ),
+                row.balance,
+            )
+            for row in result.all()
+        ]
+
+    @staticmethod
+    def _balance_expression() -> sa.Label[decimal.Decimal]:
+        """
+        Build a SQLAlchemy expression for balance computation.
+
+        ASSET and EXPENSE are debit-normal (debits - credits).
+        LIABILITY and REVENUE are credit-normal (credits - debits).
+
+        :return: labelled SQL expression computing the balance
+        """
+        debit_sum = sa.func.coalesce(
+            sa.func.sum(
+                sa.case(
+                    (
+                        orm_models.TransactionEntryModel.entry_type
+                        == enums.EntryType.DEBIT.value,
+                        orm_models.TransactionEntryModel.amount,
+                    ),
+                    else_=0,
+                )
+            ),
+            0,
+        )
+        credit_sum = sa.func.coalesce(
+            sa.func.sum(
+                sa.case(
+                    (
+                        orm_models.TransactionEntryModel.entry_type
+                        == enums.EntryType.CREDIT.value,
+                        orm_models.TransactionEntryModel.amount,
+                    ),
+                    else_=0,
+                )
+            ),
+            0,
+        )
+        return sa.case(
+            (
+                orm_models.AccountModel.account_type.in_(
+                    [
+                        enums.AccountType.ASSET.value,
+                        enums.AccountType.EXPENSE.value,
+                    ]
+                ),
+                debit_sum - credit_sum,
+            ),
+            else_=credit_sum - debit_sum,
+        ).label("balance")
