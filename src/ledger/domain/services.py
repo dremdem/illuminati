@@ -15,6 +15,14 @@ def validate_transaction_entries(
     entries: Sequence[TransactionEntry],
     description: str,
 ) -> None:
+    """
+    Validate transaction entries against double-entry bookkeeping rules.
+
+    :param entries: list of debit/credit entries to validate
+    :param description: human-readable transaction description
+    :raises InvalidTransactionError: if entries violate structural rules
+    :raises UnbalancedTransactionError: if total debits != total credits
+    """
     if not description or not description.strip():
         raise InvalidTransactionError("Transaction description must not be empty")
 
@@ -50,6 +58,16 @@ def calculate_balance(
     account_type: AccountType,
     entries: Sequence[TransactionEntry],
 ) -> Decimal:
+    """
+    Compute account balance from transaction entries.
+
+    ASSET and EXPENSE are debit-normal: balance = debits - credits.
+    LIABILITY and REVENUE are credit-normal: balance = credits - debits.
+
+    :param account_type: determines balance calculation direction
+    :param entries: transaction entries affecting this account
+    :return: computed balance as Decimal
+    """
     total_debits = sum(
         (e.amount for e in entries if e.type == EntryType.DEBIT), Decimal("0")
     )

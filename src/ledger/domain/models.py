@@ -8,6 +8,8 @@ from ledger.domain.enums import AccountType, EntryType
 
 @dataclass(frozen=True)
 class Account:
+    """Financial account (e.g., Cash, Revenue). Balance is computed, never stored."""
+
     id: UUID
     name: str
     type: AccountType
@@ -15,6 +17,8 @@ class Account:
 
 @dataclass(frozen=True)
 class TransactionEntry:
+    """A single debit or credit leg within a transaction."""
+
     id: UUID
     transaction_id: UUID
     account_id: UUID
@@ -24,6 +28,8 @@ class TransactionEntry:
 
 @dataclass(frozen=True)
 class Transaction:
+    """A financial event moving money between accounts via balanced entries."""
+
     id: UUID
     timestamp: datetime
     description: str

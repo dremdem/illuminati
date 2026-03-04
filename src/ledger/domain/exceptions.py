@@ -1,18 +1,18 @@
 class DomainError(Exception):
-    pass
+    """Base exception for all domain-layer errors."""
 
 
 class InvalidTransactionError(DomainError):
-    pass
+    """Raised when a transaction violates structural rules."""
 
 
 class UnbalancedTransactionError(DomainError):
-    pass
+    """Raised when total debits do not equal total credits."""
 
 
 class AccountNotFoundError(DomainError):
-    pass
+    """Raised when a referenced account does not exist."""
 
 
 class DuplicateAccountError(DomainError):
-    pass
+    """Raised when creating an account with a name that already exists."""
