@@ -120,10 +120,14 @@ class SqlaAccountRepository:
 
     async def get_all_with_balances(
         self,
+        limit: int | None = None,
+        offset: int = 0,
     ) -> list[tuple[models.Account, decimal.Decimal]]:
         """
         Retrieve all accounts with their computed balances via SQL aggregation.
 
+        :param limit: maximum number of accounts to return (None = all)
+        :param offset: number of accounts to skip
         :return: list of (account, balance) tuples
         """
         stmt = (
@@ -143,7 +147,11 @@ class SqlaAccountRepository:
                 orm_models.AccountModel.name,
                 orm_models.AccountModel.account_type,
             )
+            .order_by(orm_models.AccountModel.name)
+            .offset(offset)
         )
+        if limit is not None:
+            stmt = stmt.limit(limit)
         result = await self._session.execute(stmt)
         return [
             (

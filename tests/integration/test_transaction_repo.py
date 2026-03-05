@@ -33,6 +33,45 @@ async def two_accounts(
     return cash, revenue
 
 
+def _make_transaction_with_timestamp(
+    cash_id: uuid.UUID,
+    revenue_id: uuid.UUID,
+    timestamp: datetime.datetime,
+    description: str = "Sale",
+) -> models.Transaction:
+    """
+    Build a balanced domain transaction with a specific timestamp.
+
+    :param cash_id: UUID of the debit account
+    :param revenue_id: UUID of the credit account
+    :param timestamp: when the transaction occurred
+    :param description: human-readable description
+    :return: domain transaction with two entries
+    """
+    txn_id = uuid.uuid4()
+    return models.Transaction(
+        id=txn_id,
+        timestamp=timestamp,
+        description=description,
+        entries=[
+            models.TransactionEntry(
+                id=uuid.uuid4(),
+                transaction_id=txn_id,
+                account_id=cash_id,
+                type=enums.EntryType.DEBIT,
+                amount=decimal.Decimal("100.00"),
+            ),
+            models.TransactionEntry(
+                id=uuid.uuid4(),
+                transaction_id=txn_id,
+                account_id=revenue_id,
+                type=enums.EntryType.CREDIT,
+                amount=decimal.Decimal("100.00"),
+            ),
+        ],
+    )
+
+
 def _make_transaction(cash_id: uuid.UUID, revenue_id: uuid.UUID) -> models.Transaction:
     """
     Build a balanced domain transaction between two accounts.
@@ -181,3 +220,149 @@ class TestTransactionRepoGetByAccountId:
         result = await repo.get_by_account_id(uuid.uuid4())
 
         assert result == []
+
+
+class TestTransactionRepoPaginationAndFiltering:
+    """Tests for get_by_account_id() pagination and date filtering."""
+
+    async def test_limit_restricts_result_count(
+        self,
+        db_session: sa_async.AsyncSession,
+        two_accounts: tuple[models.Account, models.Account],
+    ) -> None:
+        """get_by_account_id with limit=1 returns at most 1 transaction."""
+        cash, revenue = two_accounts
+        repo = txn_repo_mod.SqlaTransactionRepository(db_session)
+        for i in range(3):
+            txn = _make_transaction_with_timestamp(
+                cash.id,
+                revenue.id,
+                datetime.datetime(2025, 1, i + 1, tzinfo=datetime.UTC),
+                description=f"Sale {i + 1}",
+            )
+            await repo.create(txn)
+
+        result = await repo.get_by_account_id(cash.id, limit=1)
+
+        assert len(result) == 1
+
+    async def test_offset_skips_rows(
+        self,
+        db_session: sa_async.AsyncSession,
+        two_accounts: tuple[models.Account, models.Account],
+    ) -> None:
+        """get_by_account_id with offset=1 skips the first transaction."""
+        cash, revenue = two_accounts
+        repo = txn_repo_mod.SqlaTransactionRepository(db_session)
+        for i in range(3):
+            txn = _make_transaction_with_timestamp(
+                cash.id,
+                revenue.id,
+                datetime.datetime(2025, 1, i + 1, tzinfo=datetime.UTC),
+                description=f"Sale {i + 1}",
+            )
+            await repo.create(txn)
+
+        result = await repo.get_by_account_id(cash.id, offset=1)
+
+        assert len(result) == 2
+
+    async def test_from_date_filters_transactions(
+        self,
+        db_session: sa_async.AsyncSession,
+        two_accounts: tuple[models.Account, models.Account],
+    ) -> None:
+        """get_by_account_id with from_date excludes earlier transactions."""
+        cash, revenue = two_accounts
+        repo = txn_repo_mod.SqlaTransactionRepository(db_session)
+        for i in range(3):
+            txn = _make_transaction_with_timestamp(
+                cash.id,
+                revenue.id,
+                datetime.datetime(2025, 1, i + 1, tzinfo=datetime.UTC),
+                description=f"Sale {i + 1}",
+            )
+            await repo.create(txn)
+
+        result = await repo.get_by_account_id(
+            cash.id,
+            from_date=datetime.datetime(2025, 1, 2, tzinfo=datetime.UTC),
+        )
+
+        assert len(result) == 2
+        descriptions = {t.description for t in result}
+        assert "Sale 1" not in descriptions
+
+    async def test_to_date_filters_transactions(
+        self,
+        db_session: sa_async.AsyncSession,
+        two_accounts: tuple[models.Account, models.Account],
+    ) -> None:
+        """get_by_account_id with to_date excludes later transactions."""
+        cash, revenue = two_accounts
+        repo = txn_repo_mod.SqlaTransactionRepository(db_session)
+        for i in range(3):
+            txn = _make_transaction_with_timestamp(
+                cash.id,
+                revenue.id,
+                datetime.datetime(2025, 1, i + 1, tzinfo=datetime.UTC),
+                description=f"Sale {i + 1}",
+            )
+            await repo.create(txn)
+
+        result = await repo.get_by_account_id(
+            cash.id,
+            to_date=datetime.datetime(2025, 1, 2, tzinfo=datetime.UTC),
+        )
+
+        assert len(result) == 2
+        descriptions = {t.description for t in result}
+        assert "Sale 3" not in descriptions
+
+    async def test_date_range_filters_transactions(
+        self,
+        db_session: sa_async.AsyncSession,
+        two_accounts: tuple[models.Account, models.Account],
+    ) -> None:
+        """from_date + to_date returns only transactions in range."""
+        cash, revenue = two_accounts
+        repo = txn_repo_mod.SqlaTransactionRepository(db_session)
+        for i in range(5):
+            txn = _make_transaction_with_timestamp(
+                cash.id,
+                revenue.id,
+                datetime.datetime(2025, 1, i + 1, tzinfo=datetime.UTC),
+                description=f"Sale {i + 1}",
+            )
+            await repo.create(txn)
+
+        result = await repo.get_by_account_id(
+            cash.id,
+            from_date=datetime.datetime(2025, 1, 2, tzinfo=datetime.UTC),
+            to_date=datetime.datetime(2025, 1, 4, tzinfo=datetime.UTC),
+        )
+
+        assert len(result) == 3
+        descriptions = {t.description for t in result}
+        assert descriptions == {"Sale 2", "Sale 3", "Sale 4"}
+
+    async def test_no_limit_returns_all(
+        self,
+        db_session: sa_async.AsyncSession,
+        two_accounts: tuple[models.Account, models.Account],
+    ) -> None:
+        """get_by_account_id without limit returns all transactions."""
+        cash, revenue = two_accounts
+        repo = txn_repo_mod.SqlaTransactionRepository(db_session)
+        for i in range(3):
+            txn = _make_transaction_with_timestamp(
+                cash.id,
+                revenue.id,
+                datetime.datetime(2025, 1, i + 1, tzinfo=datetime.UTC),
+                description=f"Sale {i + 1}",
+            )
+            await repo.create(txn)
+
+        result = await repo.get_by_account_id(cash.id)
+
+        assert len(result) == 3

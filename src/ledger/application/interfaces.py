@@ -1,5 +1,6 @@
 """Repository interfaces defining data-access contracts for the application layer."""
 
+import datetime
 import decimal
 import typing
 import uuid
@@ -59,10 +60,14 @@ class AccountRepository(typing.Protocol):
 
     async def get_all_with_balances(
         self,
+        limit: int | None = None,
+        offset: int = 0,
     ) -> list[tuple[models.Account, decimal.Decimal]]:
         """
         Retrieve all accounts with their computed balances via SQL aggregation.
 
+        :param limit: maximum number of accounts to return (None = all)
+        :param offset: number of accounts to skip
         :return: list of (account, balance) tuples
         """
         ...
@@ -90,15 +95,24 @@ class TransactionRepository(typing.Protocol):
         ...
 
     async def get_by_account_id(
-        self, account_id: uuid.UUID
+        self,
+        account_id: uuid.UUID,
+        limit: int | None = None,
+        offset: int = 0,
+        from_date: datetime.datetime | None = None,
+        to_date: datetime.datetime | None = None,
     ) -> list[models.Transaction]:
         """
-        Retrieve all transactions that have at least one entry for the given account.
+        Retrieve transactions that have at least one entry for the given account.
 
         Returns full transactions with ALL entries (not just the matching
         account's), preserving the double-entry invariant.
 
         :param account_id: UUID of the account
+        :param limit: maximum number of transactions to return (None = all)
+        :param offset: number of transactions to skip
+        :param from_date: inclusive lower bound on transaction timestamp
+        :param to_date: inclusive upper bound on transaction timestamp
         :return: list of transactions involving the account
         """
         ...

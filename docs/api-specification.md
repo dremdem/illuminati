@@ -109,20 +109,30 @@ curl -X POST http://localhost:8000/api/accounts \
 
 ### GET /api/accounts
 
-List all accounts with their computed balances.
+List all accounts with their computed balances. Supports optional pagination. Results are ordered by account name ascending.
 
-**Request:** No body. No query parameters (pagination in bonus phase).
+**Query Parameters:**
+
+| Parameter | Type | Default | Constraints | Description |
+|---|---|---|---|---|
+| `limit` | integer | *(none — return all)* | 1–100 | Maximum number of accounts to return |
+| `offset` | integer | `0` | >= 0 | Number of accounts to skip |
 
 **Response:**
 
 | Status | Body | When |
 |---|---|---|
 | `200 OK` | Array of account responses | Always (empty array if none) |
+| `422 Unprocessable Entity` | Validation errors | Invalid query parameter values |
 
-**Example:**
+**Examples:**
 
 ```bash
+# All accounts
 curl http://localhost:8000/api/accounts
+
+# Paginated
+curl "http://localhost:8000/api/accounts?limit=2&offset=0"
 ```
 
 ```json
@@ -131,15 +141,13 @@ curl http://localhost:8000/api/accounts
     "id": "uuid-1",
     "name": "Cash",
     "type": "ASSET",
-    "balance": "1350.00",
-    "createdAt": "2024-01-15T10:00:00"
+    "balance": "1350.00"
   },
   {
     "id": "uuid-2",
     "name": "Revenue",
     "type": "REVENUE",
-    "balance": "500.00",
-    "createdAt": "2024-01-15T10:00:00"
+    "balance": "500.00"
   }
 ]
 ```
@@ -269,7 +277,7 @@ curl http://localhost:8000/api/transactions/7c9e6679-7425-40de-944b-e07fc1f90ae7
 
 ### GET /api/accounts/{id}/transactions
 
-Get all transactions that affect a given account (i.e., have at least one entry referencing the account).
+Get transactions that affect a given account (i.e., have at least one entry referencing the account). Supports pagination and date filtering. Results are ordered by timestamp ascending.
 
 **Path Parameters:**
 
@@ -277,17 +285,31 @@ Get all transactions that affect a given account (i.e., have at least one entry 
 |---|---|---|
 | `id` | UUID | Account ID |
 
+**Query Parameters:**
+
+| Parameter | Type | Default | Constraints | Description |
+|---|---|---|---|---|
+| `limit` | integer | *(none — return all)* | 1–100 | Maximum number of transactions to return |
+| `offset` | integer | `0` | >= 0 | Number of transactions to skip |
+| `from_date` | datetime | *(none)* | ISO 8601 | Inclusive lower bound on transaction timestamp |
+| `to_date` | datetime | *(none)* | ISO 8601 | Inclusive upper bound on transaction timestamp |
+
 **Response:**
 
 | Status | Body | When |
 |---|---|---|
 | `200 OK` | Array of transaction responses | Account exists (empty array if no transactions) |
 | `404 Not Found` | Error detail | Account does not exist |
+| `422 Unprocessable Entity` | Validation errors | Invalid query parameter values |
 
-**Example:**
+**Examples:**
 
 ```bash
+# All transactions for account
 curl http://localhost:8000/api/accounts/550e8400-e29b-41d4-a716-446655440000/transactions
+
+# Paginated with date filtering
+curl "http://localhost:8000/api/accounts/550e8400-e29b-41d4-a716-446655440000/transactions?from_date=2025-01-01T00:00:00&to_date=2025-12-31T23:59:59&limit=10"
 ```
 
 ---

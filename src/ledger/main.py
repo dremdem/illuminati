@@ -50,7 +50,12 @@ def create_app() -> fastapi.FastAPI:
     app.include_router(transactions_router.router)
     app.include_router(transactions_router.account_transactions_router)
 
-    @app.get("/health")
+    @app.get(
+        "/health",
+        summary="Health check",
+        description="Returns a simple status object indicating the service is running.",
+        response_description="Status object with 'ok' value.",
+    )
     async def health() -> dict[str, str]:
         """
         Health check endpoint.
