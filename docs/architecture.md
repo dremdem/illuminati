@@ -79,8 +79,8 @@ Orchestrates use cases by combining domain logic with repository calls.
 
 | Module | Purpose |
 |---|---|
-| `interfaces.py` | Repository protocols (`AccountRepository`, `TransactionRepository`) using `typing.Protocol` |
-| `account_service.py` | `AccountService`: create account, get account with balance, list accounts. Returns `AccountWithBalance` DTO. |
+| `interfaces.py` | Repository protocols (`AccountRepository`, `TransactionRepository`) using `typing.Protocol`. `AccountRepository` includes `get_with_balance()` and `get_all_with_balances()` for SQL-aggregated balance retrieval. |
+| `account_service.py` | `AccountService`: create account, get account with balance, list accounts. Returns `AccountWithBalance` DTO. Depends only on `AccountRepository` (balance is computed at the repository layer via SQL aggregation). |
 | `transaction_service.py` | `TransactionService`: create transaction (validate accounts + entries, persist), get by ID, get by account. Uses `EntryData` DTO. |
 
 **Rules:**

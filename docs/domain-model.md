@@ -144,7 +144,9 @@ graph LR
 
 ### Implementation Choice
 
-Balance is computed via **SQL aggregation** (SUM with CASE WHEN) rather than loading all entries into Python. This gives O(1) memory usage regardless of entry count.
+Balance is computed via **SQL aggregation** (SUM with CASE WHEN) rather than loading all entries into Python. This gives O(1) memory usage regardless of entry count. The aggregation is implemented in `AccountRepository.get_with_balance()` and `AccountRepository.get_all_with_balances()`, so `AccountService` does not depend on `TransactionRepository` for balance computation.
+
+The domain layer's pure Python `calculate_balance()` function is preserved for unit testing.
 
 See [ADR-002: Balance Computation](./adr/002-balance-computation.md) for the decision rationale.
 
