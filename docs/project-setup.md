@@ -31,6 +31,13 @@ The Financial Ledger API is a FastAPI application implementing double-entry book
 | mypy | Static type checking (strict) | 1.13+ |
 | pytest | Testing (async) | 8.0+ |
 | testcontainers | Disposable PostgreSQL for integration tests | 4.0+ |
+| Vite | Frontend build tooling | 7.x |
+| React | UI library | 19.x |
+| TypeScript | Frontend type safety | 5.x |
+| React Router | Client-side routing | 7.x |
+| TanStack Query | Server state & caching | 5.x |
+| Tailwind CSS | Utility-first styling (v4, Vite plugin) | 4.x |
+| nginx | Frontend static file serving & API proxy | alpine |
 
 ## Project Structure
 
@@ -63,6 +70,11 @@ illuminati/
 ├── alembic.ini                 # Alembic configuration
 ├── docker-compose.yml          # App + PostgreSQL services
 ├── Dockerfile                  # Multi-stage build with uv
+├── frontend/                    # React SPA (Vite + TypeScript)
+│   ├── src/                    # Components, hooks, API client
+│   ├── Dockerfile              # Multi-stage: node build → nginx serve
+│   ├── nginx.conf              # Serves static + proxies /api to backend
+│   └── package.json            # Frontend dependencies
 ├── Makefile                    # Developer convenience targets
 ├── pyproject.toml              # Dependencies, tool config (ruff, mypy, pytest)
 ├── uv.lock                     # Locked dependency versions
@@ -152,6 +164,7 @@ This means changing source code **does not** re-download dependencies.
 |---|---|---|---|
 | `db` | postgres:16-alpine | 5432 | PostgreSQL with health check |
 | `app` | (built from Dockerfile) | 8000 | FastAPI application |
+| `frontend` | (built from frontend/Dockerfile) | 3000 | React SPA via nginx |
 
 The `app` service waits for `db` to be healthy before starting. Source directories (`src/`, `tests/`, `alembic/`) are mounted as volumes for live reloading during development. The Docker socket (`/var/run/docker.sock`) is also mounted so that testcontainers can spin up disposable PostgreSQL containers for integration tests.
 
@@ -234,6 +247,9 @@ The runner waits for the health check to pass before running tests. `DATABASE_UR
 | `make db-shell` | `psql` inside Postgres container | Interactive |
 | `make db-dump` | `pg_dump` to timestamped `.sql` file | Backup |
 | `make db-restore` | Restore from `.sql` file | Pass `file=` |
+| `make frontend-install` | `npm install` in frontend/ | Local dev setup |
+| `make frontend-dev` | Vite dev server (port 5173) | Proxies `/api` to :8000 |
+| `make frontend-build` | Production build to frontend/dist/ | Used by Docker |
 
 ## Configuration Files
 

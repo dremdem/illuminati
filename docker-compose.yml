@@ -33,5 +33,12 @@ services:
       - ./entrypoint.sh:/app/entrypoint.sh
       - /var/run/docker.sock:/var/run/docker.sock
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+
 volumes:
   pgdata:
