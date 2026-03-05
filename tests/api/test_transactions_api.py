@@ -306,3 +306,163 @@ async def test_get_transactions_for_nonexistent_account(
 
     assert response.status_code == 404
     assert "detail" in response.json()
+
+
+@pytest.mark.asyncio
+async def test_get_account_transactions_with_limit(
+    client: httpx.AsyncClient,
+) -> None:
+    """GET /api/accounts/{id}/transactions?limit=1 returns at most 1 transaction."""
+    cash_id = await _create_account(client, "Cash", "ASSET")
+    revenue_id = await _create_account(client, "Revenue", "REVENUE")
+
+    for i in range(3):
+        await client.post(
+            "/api/transactions",
+            json={
+                "description": f"Sale {i + 1}",
+                "date": f"2025-01-0{i + 1}T10:00:00",
+                "entries": [
+                    {"accountId": cash_id, "type": "DEBIT", "amount": 100.00},
+                    {"accountId": revenue_id, "type": "CREDIT", "amount": 100.00},
+                ],
+            },
+        )
+
+    response = await client.get(
+        f"/api/accounts/{cash_id}/transactions", params={"limit": 1}
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_account_transactions_with_offset(
+    client: httpx.AsyncClient,
+) -> None:
+    """GET /api/accounts/{id}/transactions?offset=1 skips the first transaction."""
+    cash_id = await _create_account(client, "Cash", "ASSET")
+    revenue_id = await _create_account(client, "Revenue", "REVENUE")
+
+    for i in range(3):
+        await client.post(
+            "/api/transactions",
+            json={
+                "description": f"Sale {i + 1}",
+                "date": f"2025-01-0{i + 1}T10:00:00",
+                "entries": [
+                    {"accountId": cash_id, "type": "DEBIT", "amount": 100.00},
+                    {"accountId": revenue_id, "type": "CREDIT", "amount": 100.00},
+                ],
+            },
+        )
+
+    response = await client.get(
+        f"/api/accounts/{cash_id}/transactions", params={"offset": 1}
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+@pytest.mark.asyncio
+async def test_get_account_transactions_with_from_date(
+    client: httpx.AsyncClient,
+) -> None:
+    """from_date query param excludes earlier transactions."""
+    cash_id = await _create_account(client, "Cash", "ASSET")
+    revenue_id = await _create_account(client, "Revenue", "REVENUE")
+
+    for i in range(3):
+        await client.post(
+            "/api/transactions",
+            json={
+                "description": f"Sale {i + 1}",
+                "date": f"2025-01-0{i + 1}T10:00:00",
+                "entries": [
+                    {"accountId": cash_id, "type": "DEBIT", "amount": 100.00},
+                    {"accountId": revenue_id, "type": "CREDIT", "amount": 100.00},
+                ],
+            },
+        )
+
+    response = await client.get(
+        f"/api/accounts/{cash_id}/transactions",
+        params={"from_date": "2025-01-02T00:00:00"},
+    )
+
+    assert response.status_code == 200
+    txns = response.json()
+    assert len(txns) == 2
+    descriptions = {t["description"] for t in txns}
+    assert "Sale 1" not in descriptions
+
+
+@pytest.mark.asyncio
+async def test_get_account_transactions_with_to_date(
+    client: httpx.AsyncClient,
+) -> None:
+    """GET /api/accounts/{id}/transactions?to_date=... excludes later transactions."""
+    cash_id = await _create_account(client, "Cash", "ASSET")
+    revenue_id = await _create_account(client, "Revenue", "REVENUE")
+
+    for i in range(3):
+        await client.post(
+            "/api/transactions",
+            json={
+                "description": f"Sale {i + 1}",
+                "date": f"2025-01-0{i + 1}T10:00:00",
+                "entries": [
+                    {"accountId": cash_id, "type": "DEBIT", "amount": 100.00},
+                    {"accountId": revenue_id, "type": "CREDIT", "amount": 100.00},
+                ],
+            },
+        )
+
+    response = await client.get(
+        f"/api/accounts/{cash_id}/transactions",
+        params={"to_date": "2025-01-02T23:59:59"},
+    )
+
+    assert response.status_code == 200
+    txns = response.json()
+    assert len(txns) == 2
+    descriptions = {t["description"] for t in txns}
+    assert "Sale 3" not in descriptions
+
+
+@pytest.mark.asyncio
+async def test_get_account_transactions_with_date_range(
+    client: httpx.AsyncClient,
+) -> None:
+    """from_date + to_date returns only transactions in range."""
+    cash_id = await _create_account(client, "Cash", "ASSET")
+    revenue_id = await _create_account(client, "Revenue", "REVENUE")
+
+    for i in range(5):
+        await client.post(
+            "/api/transactions",
+            json={
+                "description": f"Sale {i + 1}",
+                "date": f"2025-01-0{i + 1}T10:00:00",
+                "entries": [
+                    {"accountId": cash_id, "type": "DEBIT", "amount": 100.00},
+                    {"accountId": revenue_id, "type": "CREDIT", "amount": 100.00},
+                ],
+            },
+        )
+
+    response = await client.get(
+        f"/api/accounts/{cash_id}/transactions",
+        params={
+            "from_date": "2025-01-02T00:00:00",
+            "to_date": "2025-01-04T23:59:59",
+        },
+    )
+
+    assert response.status_code == 200
+    txns = response.json()
+    assert len(txns) == 3
+    descriptions = {t["description"] for t in txns}
+    assert descriptions == {"Sale 2", "Sale 3", "Sale 4"}

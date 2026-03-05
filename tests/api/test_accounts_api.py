@@ -210,6 +210,44 @@ async def test_get_all_accounts_balances_after_transactions(
 
 
 @pytest.mark.asyncio
+async def test_list_accounts_with_limit(client: httpx.AsyncClient) -> None:
+    """GET /api/accounts?limit=2 returns at most 2 accounts."""
+    for name in ["Alpha", "Bravo", "Charlie"]:
+        await client.post("/api/accounts", json={"name": name, "type": "ASSET"})
+
+    response = await client.get("/api/accounts", params={"limit": 2})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_accounts_with_offset(client: httpx.AsyncClient) -> None:
+    """GET /api/accounts?offset=1 skips the first account (ordered by name)."""
+    for name in ["Alpha", "Bravo", "Charlie"]:
+        await client.post("/api/accounts", json={"name": name, "type": "ASSET"})
+
+    response = await client.get("/api/accounts", params={"offset": 1})
+
+    assert response.status_code == 200
+    names = [a["name"] for a in response.json()]
+    assert "Alpha" not in names
+    assert len(names) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_accounts_no_limit_returns_all(client: httpx.AsyncClient) -> None:
+    """GET /api/accounts without limit returns all accounts."""
+    for name in ["Alpha", "Bravo", "Charlie"]:
+        await client.post("/api/accounts", json={"name": name, "type": "ASSET"})
+
+    response = await client.get("/api/accounts")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 3
+
+
+@pytest.mark.asyncio
 async def test_get_account_by_id_balance_after_transaction(
     client: httpx.AsyncClient,
 ) -> None:

@@ -137,3 +137,49 @@ class TestAccountRepoExists:
         repo = account_repo_mod.SqlaAccountRepository(db_session)
 
         assert await repo.exists(uuid.uuid4()) is False
+
+
+class TestAccountRepoPagination:
+    """Tests for get_all_with_balances() pagination via limit and offset."""
+
+    async def test_limit_restricts_result_count(
+        self, db_session: sa_async.AsyncSession
+    ) -> None:
+        """get_all_with_balances with limit=2 returns at most 2 accounts."""
+        repo = account_repo_mod.SqlaAccountRepository(db_session)
+        for name in ["Alpha", "Bravo", "Charlie"]:
+            await repo.create(
+                models.Account(id=uuid.uuid4(), name=name, type=enums.AccountType.ASSET)
+            )
+
+        result = await repo.get_all_with_balances(limit=2)
+
+        assert len(result) == 2
+
+    async def test_offset_skips_rows(self, db_session: sa_async.AsyncSession) -> None:
+        """offset=1 skips first account (ordered by name)."""
+        repo = account_repo_mod.SqlaAccountRepository(db_session)
+        for name in ["Alpha", "Bravo", "Charlie"]:
+            await repo.create(
+                models.Account(id=uuid.uuid4(), name=name, type=enums.AccountType.ASSET)
+            )
+
+        result = await repo.get_all_with_balances(offset=1)
+
+        names = [account.name for account, _ in result]
+        assert "Alpha" not in names
+        assert len(names) == 2
+
+    async def test_no_limit_returns_all(
+        self, db_session: sa_async.AsyncSession
+    ) -> None:
+        """get_all_with_balances without limit returns all accounts."""
+        repo = account_repo_mod.SqlaAccountRepository(db_session)
+        for name in ["Alpha", "Bravo", "Charlie"]:
+            await repo.create(
+                models.Account(id=uuid.uuid4(), name=name, type=enums.AccountType.ASSET)
+            )
+
+        result = await repo.get_all_with_balances()
+
+        assert len(result) == 3

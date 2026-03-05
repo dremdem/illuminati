@@ -33,6 +33,10 @@ def _to_response(
     "",
     response_model=schemas.AccountResponse,
     status_code=201,
+    summary="Create account",
+    description="Create a new financial account with the given name and type. "
+    "The name must be unique and non-empty. Balance starts at 0.00.",
+    response_description="The created account with a zero balance.",
 )
 async def create_account(
     body: schemas.CreateAccountRequest,
@@ -55,26 +59,46 @@ async def create_account(
 @router.get(
     "",
     response_model=list[schemas.AccountResponse],
+    summary="List accounts",
+    description="Retrieve all accounts with their balances computed via "
+    "SQL aggregation. Supports optional pagination via limit and offset.",
+    response_description="Array of accounts with computed balances.",
 )
 async def list_accounts(
     service: typing.Annotated[
         account_service.AccountService,
         fastapi.Depends(dependencies.get_account_service),
     ],
+    limit: typing.Annotated[
+        int | None,
+        fastapi.Query(
+            ge=1, le=100, description="Maximum number of accounts to return."
+        ),
+    ] = None,
+    offset: typing.Annotated[
+        int,
+        fastapi.Query(ge=0, description="Number of accounts to skip."),
+    ] = 0,
 ) -> list[schemas.AccountResponse]:
     """
     List all accounts with computed balances.
 
     :param service: injected account service
+    :param limit: maximum number of accounts to return (None = all)
+    :param offset: number of accounts to skip
     :return: list of accounts with balances
     """
-    results = await service.get_all()
+    results = await service.get_all(limit=limit, offset=offset)
     return [_to_response(r) for r in results]
 
 
 @router.get(
     "/{account_id}",
     response_model=schemas.AccountResponse,
+    summary="Get account",
+    description="Retrieve a single account by its UUID, including the balance "
+    "computed via SQL aggregation across all transaction entries.",
+    response_description="The account with its computed balance.",
 )
 async def get_account(
     account_id: uuid.UUID,

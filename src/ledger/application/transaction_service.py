@@ -104,16 +104,31 @@ class TransactionService:
         return txn
 
     async def get_by_account_id(
-        self, account_id: uuid.UUID
+        self,
+        account_id: uuid.UUID,
+        limit: int | None = None,
+        offset: int = 0,
+        from_date: datetime.datetime | None = None,
+        to_date: datetime.datetime | None = None,
     ) -> list[models.Transaction]:
         """
-        Retrieve all transactions involving a given account.
+        Retrieve transactions involving a given account with optional filtering.
 
         :param account_id: UUID of the account
+        :param limit: maximum number of transactions to return (None = all)
+        :param offset: number of transactions to skip
+        :param from_date: inclusive lower bound on transaction timestamp
+        :param to_date: inclusive upper bound on transaction timestamp
         :return: list of transactions with entries
         :raises AccountNotFoundError: if the account does not exist
         """
         account = await self._account_repo.get_by_id(account_id)
         if account is None:
             raise exceptions.AccountNotFoundError(f"Account {account_id} not found")
-        return await self._transaction_repo.get_by_account_id(account_id)
+        return await self._transaction_repo.get_by_account_id(
+            account_id,
+            limit=limit,
+            offset=offset,
+            from_date=from_date,
+            to_date=to_date,
+        )

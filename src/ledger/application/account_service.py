@@ -75,13 +75,21 @@ class AccountService:
         account, balance = result
         return AccountWithBalance(account=account, balance=balance)
 
-    async def get_all(self) -> list[AccountWithBalance]:
+    async def get_all(
+        self,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[AccountWithBalance]:
         """
         Retrieve all accounts with balances computed via SQL aggregation.
 
+        :param limit: maximum number of accounts to return (None = all)
+        :param offset: number of accounts to skip
         :return: list of accounts with their balances
         """
-        results = await self._account_repo.get_all_with_balances()
+        results = await self._account_repo.get_all_with_balances(
+            limit=limit, offset=offset
+        )
         return [
             AccountWithBalance(account=account, balance=balance)
             for account, balance in results
