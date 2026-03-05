@@ -54,9 +54,10 @@ async def test_seed_creates_accounts_with_correct_balances(
 
     async with session_factory() as session:
         repo = account_repo_mod.SqlaAccountRepository(session)
-        results = await repo.get_all_with_balances()
-        balances = {account.name: balance for account, balance in results}
+        items, total = await repo.get_all_with_balances()
+        balances = {account.name: balance for account, balance in items}
 
+    assert total == len(EXPECTED_BALANCES)
     assert len(balances) == len(EXPECTED_BALANCES)
     for name, expected in EXPECTED_BALANCES.items():
         assert balances[name] == expected, f"{name}: {balances[name]} != {expected}"
@@ -74,9 +75,10 @@ async def test_seed_is_idempotent(
 
     async with session_factory() as session:
         repo = account_repo_mod.SqlaAccountRepository(session)
-        results = await repo.get_all_with_balances()
-        balances = {account.name: balance for account, balance in results}
+        items, total = await repo.get_all_with_balances()
+        balances = {account.name: balance for account, balance in items}
 
+    assert total == len(EXPECTED_BALANCES)
     assert len(balances) == len(EXPECTED_BALANCES)
     for name, expected in EXPECTED_BALANCES.items():
         assert balances[name] == expected, f"{name}: {balances[name]} != {expected}"

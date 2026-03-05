@@ -94,6 +94,67 @@ async def create_transaction(
 
 
 @router.get(
+    "",
+    response_model=schemas.PaginatedTransactionResponse,
+    response_model_by_alias=True,
+    summary="List transactions",
+    description="Retrieve all transactions with optional pagination and date "
+    "filtering. Results are ordered by timestamp ascending.",
+    response_description="Paginated envelope of transactions with entries.",
+)
+async def list_transactions(
+    service: typing.Annotated[
+        transaction_service.TransactionService,
+        fastapi.Depends(dependencies.get_transaction_service),
+    ],
+    limit: typing.Annotated[
+        int | None,
+        fastapi.Query(
+            ge=1, le=100, description="Maximum number of transactions to return."
+        ),
+    ] = None,
+    offset: typing.Annotated[
+        int,
+        fastapi.Query(ge=0, description="Number of transactions to skip."),
+    ] = 0,
+    from_date: typing.Annotated[
+        datetime.datetime | None,
+        fastapi.Query(
+            description="Inclusive lower bound on transaction timestamp (ISO 8601)."
+        ),
+    ] = None,
+    to_date: typing.Annotated[
+        datetime.datetime | None,
+        fastapi.Query(
+            description="Inclusive upper bound on transaction timestamp (ISO 8601)."
+        ),
+    ] = None,
+) -> schemas.PaginatedTransactionResponse:
+    """
+    List all transactions with optional filtering.
+
+    :param service: injected transaction service
+    :param limit: maximum number of transactions to return (None = all)
+    :param offset: number of transactions to skip
+    :param from_date: inclusive lower bound on transaction timestamp
+    :param to_date: inclusive upper bound on transaction timestamp
+    :return: paginated envelope of transactions with entries
+    """
+    result = await service.get_all(
+        limit=limit,
+        offset=offset,
+        from_date=from_date,
+        to_date=to_date,
+    )
+    return schemas.PaginatedTransactionResponse(
+        items=[_txn_to_response(t) for t in result.items],
+        total=result.total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get(
     "/{transaction_id}",
     response_model=schemas.TransactionResponse,
     response_model_by_alias=True,
@@ -122,13 +183,13 @@ async def get_transaction(
 
 @account_transactions_router.get(
     "/{account_id}/transactions",
-    response_model=list[schemas.TransactionResponse],
+    response_model=schemas.PaginatedTransactionResponse,
     response_model_by_alias=True,
     summary="List account transactions",
     description="Retrieve transactions affecting a given account. Supports "
     "pagination via limit/offset and date filtering via from_date/to_date "
     "(inclusive). Results are ordered by timestamp ascending.",
-    response_description="Array of transactions with all entries.",
+    response_description="Paginated envelope of transactions with all entries.",
 )
 async def get_account_transactions(
     account_id: uuid.UUID,
@@ -158,7 +219,7 @@ async def get_account_transactions(
             description="Inclusive upper bound on transaction timestamp (ISO 8601)."
         ),
     ] = None,
-) -> list[schemas.TransactionResponse]:
+) -> schemas.PaginatedTransactionResponse:
     """
     Retrieve transactions affecting a given account.
 
@@ -168,13 +229,18 @@ async def get_account_transactions(
     :param offset: number of transactions to skip
     :param from_date: inclusive lower bound on transaction timestamp
     :param to_date: inclusive upper bound on transaction timestamp
-    :return: list of transactions with entries
+    :return: paginated envelope of transactions with entries
     """
-    results = await service.get_by_account_id(
+    result = await service.get_by_account_id(
         account_id,
         limit=limit,
         offset=offset,
         from_date=from_date,
         to_date=to_date,
     )
-    return [_txn_to_response(r) for r in results]
+    return schemas.PaginatedTransactionResponse(
+        items=[_txn_to_response(r) for r in result.items],
+        total=result.total,
+        limit=limit,
+        offset=offset,
+    )

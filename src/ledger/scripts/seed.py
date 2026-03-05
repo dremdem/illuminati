@@ -194,7 +194,7 @@ async def seed(
     # --- summary ---
     async with session_factory() as session:
         acct_repo = account_repo_mod.SqlaAccountRepository(session)
-        results = await acct_repo.get_all_with_balances()
+        results, total = await acct_repo.get_all_with_balances()
 
     print("Seed data loaded successfully!")
     print()

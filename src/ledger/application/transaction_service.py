@@ -6,6 +6,7 @@ import decimal
 import uuid
 
 import ledger.application.interfaces as interfaces
+import ledger.application.pagination as pagination
 import ledger.domain.enums as enums
 import ledger.domain.exceptions as exceptions
 import ledger.domain.models as models
@@ -110,7 +111,7 @@ class TransactionService:
         offset: int = 0,
         from_date: datetime.datetime | None = None,
         to_date: datetime.datetime | None = None,
-    ) -> list[models.Transaction]:
+    ) -> pagination.PaginatedResult[models.Transaction]:
         """
         Retrieve transactions involving a given account with optional filtering.
 
@@ -119,16 +120,41 @@ class TransactionService:
         :param offset: number of transactions to skip
         :param from_date: inclusive lower bound on transaction timestamp
         :param to_date: inclusive upper bound on transaction timestamp
-        :return: list of transactions with entries
+        :return: paginated result of transactions with entries
         :raises AccountNotFoundError: if the account does not exist
         """
         account = await self._account_repo.get_by_id(account_id)
         if account is None:
             raise exceptions.AccountNotFoundError(f"Account {account_id} not found")
-        return await self._transaction_repo.get_by_account_id(
+        items, total = await self._transaction_repo.get_by_account_id(
             account_id,
             limit=limit,
             offset=offset,
             from_date=from_date,
             to_date=to_date,
         )
+        return pagination.PaginatedResult(items=items, total=total)
+
+    async def get_all(
+        self,
+        limit: int | None = None,
+        offset: int = 0,
+        from_date: datetime.datetime | None = None,
+        to_date: datetime.datetime | None = None,
+    ) -> pagination.PaginatedResult[models.Transaction]:
+        """
+        Retrieve all transactions with optional pagination and date filtering.
+
+        :param limit: maximum number of transactions to return (None = all)
+        :param offset: number of transactions to skip
+        :param from_date: inclusive lower bound on transaction timestamp
+        :param to_date: inclusive upper bound on transaction timestamp
+        :return: paginated result of transactions with entries
+        """
+        items, total = await self._transaction_repo.get_all(
+            limit=limit,
+            offset=offset,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return pagination.PaginatedResult(items=items, total=total)

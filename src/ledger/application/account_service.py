@@ -5,6 +5,7 @@ import decimal
 import uuid
 
 import ledger.application.interfaces as interfaces
+import ledger.application.pagination as pagination
 import ledger.domain.enums as enums
 import ledger.domain.exceptions as exceptions
 import ledger.domain.models as models
@@ -79,18 +80,19 @@ class AccountService:
         self,
         limit: int | None = None,
         offset: int = 0,
-    ) -> list[AccountWithBalance]:
+    ) -> pagination.PaginatedResult[AccountWithBalance]:
         """
         Retrieve all accounts with balances computed via SQL aggregation.
 
         :param limit: maximum number of accounts to return (None = all)
         :param offset: number of accounts to skip
-        :return: list of accounts with their balances
+        :return: paginated result of accounts with their balances
         """
-        results = await self._account_repo.get_all_with_balances(
+        results, total = await self._account_repo.get_all_with_balances(
             limit=limit, offset=offset
         )
-        return [
+        items = [
             AccountWithBalance(account=account, balance=balance)
             for account, balance in results
         ]
+        return pagination.PaginatedResult(items=items, total=total)

@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Base URL](#base-url)
+- [CORS](#cors)
 - [Common Response Formats](#common-response-formats)
 - [Account Endpoints](#account-endpoints)
   - [POST /api/accounts](#post-apiaccounts)
@@ -10,6 +11,7 @@
   - [GET /api/accounts/{id}](#get-apiaccountsid)
 - [Transaction Endpoints](#transaction-endpoints)
   - [POST /api/transactions](#post-apitransactions)
+  - [GET /api/transactions](#get-apitransactions)
   - [GET /api/transactions/{id}](#get-apitransactionsid)
   - [GET /api/accounts/{id}/transactions](#get-apiaccountsidtransactions)
 - [Error Responses](#error-responses)
@@ -17,7 +19,7 @@
 
 ## Overview
 
-The Financial Ledger API exposes 6 REST endpoints for managing accounts and transactions. All request/response bodies use JSON. Monetary amounts are serialized as strings with 2 decimal places to avoid floating-point precision issues.
+The Financial Ledger API exposes 7 REST endpoints for managing accounts and transactions. All request/response bodies use JSON. Monetary amounts are serialized as strings with 2 decimal places to avoid floating-point precision issues.
 
 ## Base URL
 
@@ -25,7 +27,37 @@ The Financial Ledger API exposes 6 REST endpoints for managing accounts and tran
 http://localhost:8000/api
 ```
 
+## CORS
+
+Cross-Origin Resource Sharing is enabled via the `CORS_ORIGINS` environment variable.
+
+| Setting | Default |
+|---|---|
+| `CORS_ORIGINS` | `http://localhost:5173,http://localhost:3000` |
+
+Set to a comma-separated list of allowed origins. All HTTP methods and headers are permitted for listed origins. Credentials are allowed.
+
 ## Common Response Formats
+
+### Paginated Envelope
+
+List endpoints (`GET /api/accounts`, `GET /api/transactions`, `GET /api/accounts/{id}/transactions`) return a paginated envelope:
+
+```json
+{
+  "items": [ ... ],
+  "total": 47,
+  "limit": 10,
+  "offset": 0
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `items` | array | Page of results |
+| `total` | integer | Total count (ignoring limit/offset) |
+| `limit` | integer \| null | Requested limit (`null` when not specified) |
+| `offset` | integer | Requested offset |
 
 ### Account Response
 
@@ -122,7 +154,7 @@ List all accounts with their computed balances. Supports optional pagination. Re
 
 | Status | Body | When |
 |---|---|---|
-| `200 OK` | Array of account responses | Always (empty array if none) |
+| `200 OK` | Paginated envelope of account responses | Always (empty items if none) |
 | `422 Unprocessable Entity` | Validation errors | Invalid query parameter values |
 
 **Examples:**
@@ -136,20 +168,25 @@ curl "http://localhost:8000/api/accounts?limit=2&offset=0"
 ```
 
 ```json
-[
-  {
-    "id": "uuid-1",
-    "name": "Cash",
-    "type": "ASSET",
-    "balance": "1350.00"
-  },
-  {
-    "id": "uuid-2",
-    "name": "Revenue",
-    "type": "REVENUE",
-    "balance": "500.00"
-  }
-]
+{
+  "items": [
+    {
+      "id": "uuid-1",
+      "name": "Cash",
+      "type": "ASSET",
+      "balance": "1350.00"
+    },
+    {
+      "id": "uuid-2",
+      "name": "Revenue",
+      "type": "REVENUE",
+      "balance": "500.00"
+    }
+  ],
+  "total": 5,
+  "limit": 2,
+  "offset": 0
+}
 ```
 
 ---
@@ -250,6 +287,38 @@ curl -X POST http://localhost:8000/api/transactions \
 
 ---
 
+### GET /api/transactions
+
+List all transactions with optional pagination and date filtering. Results are ordered by timestamp ascending.
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Constraints | Description |
+|---|---|---|---|---|
+| `limit` | integer | *(none — return all)* | 1–100 | Maximum number of transactions to return |
+| `offset` | integer | `0` | >= 0 | Number of transactions to skip |
+| `from_date` | datetime | *(none)* | ISO 8601 | Inclusive lower bound on transaction timestamp |
+| `to_date` | datetime | *(none)* | ISO 8601 | Inclusive upper bound on transaction timestamp |
+
+**Response:**
+
+| Status | Body | When |
+|---|---|---|
+| `200 OK` | Paginated envelope of transaction responses | Always (empty items if none) |
+| `422 Unprocessable Entity` | Validation errors | Invalid query parameter values |
+
+**Examples:**
+
+```bash
+# All transactions
+curl http://localhost:8000/api/transactions
+
+# Paginated with date filtering
+curl "http://localhost:8000/api/transactions?from_date=2025-01-01T00:00:00&to_date=2025-12-31T23:59:59&limit=10"
+```
+
+---
+
 ### GET /api/transactions/{id}
 
 Get a single transaction with all its entries.
@@ -298,7 +367,7 @@ Get transactions that affect a given account (i.e., have at least one entry refe
 
 | Status | Body | When |
 |---|---|---|
-| `200 OK` | Array of transaction responses | Account exists (empty array if no transactions) |
+| `200 OK` | Paginated envelope of transaction responses | Account exists (empty items if no transactions) |
 | `404 Not Found` | Error detail | Account does not exist |
 | `422 Unprocessable Entity` | Validation errors | Invalid query parameter values |
 

@@ -255,8 +255,9 @@ async def test_cumulative_multiple_transactions(
     assert cash_balance == decimal.Decimal("600.00")
 
     # Verify get_all_with_balances
-    all_results = await repo.get_all_with_balances()
-    balances = {account.name: balance for account, balance in all_results}
+    all_items, all_total = await repo.get_all_with_balances()
+    assert all_total == 3
+    balances = {account.name: balance for account, balance in all_items}
     assert balances["Cash"] == decimal.Decimal("600.00")
     assert balances["Revenue"] == decimal.Decimal("800.00")
     assert balances["Supplies"] == decimal.Decimal("200.00")

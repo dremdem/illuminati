@@ -70,11 +70,15 @@ async def test_create_account_invalid_type(client: httpx.AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_get_all_accounts_empty(client: httpx.AsyncClient) -> None:
-    """GET /api/accounts with no data returns 200 and empty list."""
+    """GET /api/accounts with no data returns 200 and empty envelope."""
     response = await client.get("/api/accounts")
 
     assert response.status_code == 200
-    assert response.json() == []
+    body = response.json()
+    assert body["items"] == []
+    assert body["total"] == 0
+    assert body["limit"] is None
+    assert body["offset"] == 0
 
 
 @pytest.mark.asyncio
@@ -124,7 +128,9 @@ async def test_get_all_accounts_with_balances(
     response = await client.get("/api/accounts")
 
     assert response.status_code == 200
-    accounts = response.json()
+    body = response.json()
+    assert body["total"] == 2
+    accounts = body["items"]
     assert len(accounts) == 2
 
     accounts_by_name = {a["name"]: a for a in accounts}
@@ -204,7 +210,9 @@ async def test_get_all_accounts_balances_after_transactions(
     response = await client.get("/api/accounts")
 
     assert response.status_code == 200
-    accounts = {a["name"]: a for a in response.json()}
+    body = response.json()
+    assert body["total"] == 2
+    accounts = {a["name"]: a for a in body["items"]}
     assert accounts["Cash"]["balance"] == "800.00"
     assert accounts["Revenue"]["balance"] == "800.00"
 
@@ -218,7 +226,11 @@ async def test_list_accounts_with_limit(client: httpx.AsyncClient) -> None:
     response = await client.get("/api/accounts", params={"limit": 2})
 
     assert response.status_code == 200
-    assert len(response.json()) == 2
+    body = response.json()
+    assert len(body["items"]) == 2
+    assert body["total"] == 3
+    assert body["limit"] == 2
+    assert body["offset"] == 0
 
 
 @pytest.mark.asyncio
@@ -230,9 +242,12 @@ async def test_list_accounts_with_offset(client: httpx.AsyncClient) -> None:
     response = await client.get("/api/accounts", params={"offset": 1})
 
     assert response.status_code == 200
-    names = [a["name"] for a in response.json()]
+    body = response.json()
+    names = [a["name"] for a in body["items"]]
     assert "Alpha" not in names
     assert len(names) == 2
+    assert body["total"] == 3
+    assert body["offset"] == 1
 
 
 @pytest.mark.asyncio
@@ -244,7 +259,9 @@ async def test_list_accounts_no_limit_returns_all(client: httpx.AsyncClient) -> 
     response = await client.get("/api/accounts")
 
     assert response.status_code == 200
-    assert len(response.json()) == 3
+    body = response.json()
+    assert len(body["items"]) == 3
+    assert body["total"] == 3
 
 
 @pytest.mark.asyncio

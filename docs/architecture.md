@@ -80,8 +80,9 @@ Orchestrates use cases by combining domain logic with repository calls.
 | Module | Purpose |
 |---|---|
 | `interfaces.py` | Repository protocols (`AccountRepository`, `TransactionRepository`) using `typing.Protocol`. `AccountRepository` includes `get_with_balance()` and `get_all_with_balances()` for SQL-aggregated balance retrieval. |
-| `account_service.py` | `AccountService`: create account, get account with balance, list accounts. Returns `AccountWithBalance` DTO. Depends only on `AccountRepository` (balance is computed at the repository layer via SQL aggregation). |
-| `transaction_service.py` | `TransactionService`: create transaction (validate accounts + entries, persist), get by ID, get by account. Uses `EntryData` DTO. |
+| `pagination.py` | `PaginatedResult[T]` frozen dataclass -- generic paginated container (items + total count). Used by services to return paginated data. |
+| `account_service.py` | `AccountService`: create account, get account with balance, list accounts. Returns `AccountWithBalance` DTO (or `PaginatedResult[AccountWithBalance]` for lists). Depends only on `AccountRepository` (balance is computed at the repository layer via SQL aggregation). |
+| `transaction_service.py` | `TransactionService`: create transaction (validate accounts + entries, persist), get by ID, get by account, list all. Uses `EntryData` DTO, returns `PaginatedResult` for list operations. |
 
 **Rules:**
 - Depends on `domain` (uses entities and business rules)
@@ -114,8 +115,8 @@ Thin HTTP interface. No business logic.
 | Module | Purpose |
 |---|---|
 | `routers/accounts.py` | Account endpoints: `POST /api/accounts`, `GET /api/accounts`, `GET /api/accounts/{id}` |
-| `routers/transactions.py` | Transaction endpoints: `POST /api/transactions`, `GET /api/transactions/{id}`, `GET /api/accounts/{id}/transactions` |
-| `schemas.py` | Pydantic v2 request/response models for accounts and transactions (with camelCase aliases) |
+| `routers/transactions.py` | Transaction endpoints: `POST /api/transactions`, `GET /api/transactions`, `GET /api/transactions/{id}`, `GET /api/accounts/{id}/transactions` |
+| `schemas.py` | Pydantic v2 request/response models for accounts and transactions (with camelCase aliases), paginated envelope schemas (`PaginatedAccountResponse`, `PaginatedTransactionResponse`) |
 | `dependencies.py` | FastAPI DI chain: `get_session` → repos → `get_account_service` / `get_transaction_service` |
 | `exception_handlers.py` | Maps domain exceptions to HTTP status codes (404, 409, 400) |
 
@@ -163,6 +164,7 @@ src/ledger/
 ├── application/                # MIDDLE - Use cases
 │   ├── __init__.py
 │   ├── interfaces.py           # Repository protocols (typing.Protocol)
+│   ├── pagination.py           # PaginatedResult[T] generic container
 │   ├── account_service.py      # Account use cases
 │   └── transaction_service.py  # Transaction use cases
 ├── infrastructure/             # OUTER - DB, ORM
@@ -183,7 +185,7 @@ src/ledger/
 │       ├── __init__.py
 │       ├── accounts.py         # /api/accounts
 │       └── transactions.py     # /api/transactions
-└── main.py                     # App factory with async lifespan (DB engine/session)
+└── main.py                     # App factory with async lifespan (DB engine/session), CORS middleware
 ```
 
 ## Request Flow
