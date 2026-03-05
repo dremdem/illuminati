@@ -93,6 +93,14 @@ curl http://localhost:8000/health
 # {"status":"ok"}
 ```
 
+Load sample data (optional):
+
+```bash
+make seed-data
+```
+
+This creates 10 accounts and 7 transactions covering common bookkeeping scenarios. See [Use Cases](docs/use-cases.md) for details.
+
 Stop:
 
 ```bash

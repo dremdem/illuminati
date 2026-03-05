@@ -1,4 +1,4 @@
-.PHONY: up down build lint typecheck test check run
+.PHONY: up down build lint typecheck test check run seed-data
 
 up:
 	docker compose up -d
@@ -26,3 +26,6 @@ check: lint typecheck test
 
 run:
 	docker compose run --rm --no-deps app uvicorn ledger.main:app --host 0.0.0.0 --port 8000
+
+seed-data:
+	docker compose run --rm app python -m ledger.scripts.seed
