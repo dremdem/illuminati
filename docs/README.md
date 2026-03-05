@@ -26,6 +26,12 @@ See the top-level [README](../README.md) for quick-start instructions, API usage
 | [API Specification](./api-specification.md) | All 7 REST endpoints with request/response contracts, paginated envelopes, CORS config, status codes, curl examples, error matrix |
 | [Use Cases](./use-cases.md) | 3 multi-step business scenarios with seed data, JSON payloads, and expected balances |
 
+## Frontend
+
+| Document | Description |
+|---|---|
+| [Frontend](./frontend.md) | React SPA architecture, component hierarchy, dev workflow, Docker integration |
+
 ## Development
 
 | Document | Description |

@@ -1,5 +1,6 @@
 .PHONY: up down build lint typecheck test check run seed-data \
-       db-reset db-migrate db-revision db-shell db-dump db-restore
+       db-reset db-migrate db-revision db-shell db-dump db-restore \
+       frontend-dev frontend-build frontend-install
 
 up:
 	docker compose up -d
@@ -55,3 +56,14 @@ db-dump:
 
 db-restore:
 	docker compose exec -T db psql -U ledger -d ledger < $(file)
+
+# ── Frontend ─────────────────────────────────────────────────────────
+
+frontend-install:
+	cd frontend && npm install
+
+frontend-dev:
+	cd frontend && npm run dev
+
+frontend-build:
+	cd frontend && npm run build
