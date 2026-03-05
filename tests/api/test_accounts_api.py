@@ -159,3 +159,83 @@ async def test_get_account_not_found(client: httpx.AsyncClient) -> None:
 
     assert response.status_code == 404
     assert "detail" in response.json()
+
+
+@pytest.mark.asyncio
+async def test_get_all_accounts_balances_after_transactions(
+    client: httpx.AsyncClient,
+) -> None:
+    """GET /api/accounts returns correct balances after two transactions."""
+    # Create accounts
+    cash_resp = await client.post(
+        "/api/accounts", json={"name": "Cash", "type": "ASSET"}
+    )
+    revenue_resp = await client.post(
+        "/api/accounts", json={"name": "Revenue", "type": "REVENUE"}
+    )
+    cash_id = cash_resp.json()["id"]
+    revenue_id = revenue_resp.json()["id"]
+
+    # Txn 1: debit Cash $500, credit Revenue $500
+    await client.post(
+        "/api/transactions",
+        json={
+            "timestamp": "2025-01-01T00:00:00Z",
+            "description": "Sale 1",
+            "entries": [
+                {"account_id": cash_id, "type": "DEBIT", "amount": "500.00"},
+                {"account_id": revenue_id, "type": "CREDIT", "amount": "500.00"},
+            ],
+        },
+    )
+    # Txn 2: debit Cash $300, credit Revenue $300
+    await client.post(
+        "/api/transactions",
+        json={
+            "timestamp": "2025-01-02T00:00:00Z",
+            "description": "Sale 2",
+            "entries": [
+                {"account_id": cash_id, "type": "DEBIT", "amount": "300.00"},
+                {"account_id": revenue_id, "type": "CREDIT", "amount": "300.00"},
+            ],
+        },
+    )
+
+    response = await client.get("/api/accounts")
+
+    assert response.status_code == 200
+    accounts = {a["name"]: a for a in response.json()}
+    assert accounts["Cash"]["balance"] == "800.00"
+    assert accounts["Revenue"]["balance"] == "800.00"
+
+
+@pytest.mark.asyncio
+async def test_get_account_by_id_balance_after_transaction(
+    client: httpx.AsyncClient,
+) -> None:
+    """GET /api/accounts/{id} returns correct balance after a transaction."""
+    cash_resp = await client.post(
+        "/api/accounts", json={"name": "Cash", "type": "ASSET"}
+    )
+    revenue_resp = await client.post(
+        "/api/accounts", json={"name": "Revenue", "type": "REVENUE"}
+    )
+    cash_id = cash_resp.json()["id"]
+    revenue_id = revenue_resp.json()["id"]
+
+    await client.post(
+        "/api/transactions",
+        json={
+            "timestamp": "2025-01-01T00:00:00Z",
+            "description": "Sale",
+            "entries": [
+                {"account_id": cash_id, "type": "DEBIT", "amount": "750.00"},
+                {"account_id": revenue_id, "type": "CREDIT", "amount": "750.00"},
+            ],
+        },
+    )
+
+    response = await client.get(f"/api/accounts/{cash_id}")
+
+    assert response.status_code == 200
+    assert response.json()["balance"] == "750.00"

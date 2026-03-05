@@ -1,5 +1,6 @@
 """Repository interfaces defining data-access contracts for the application layer."""
 
+import decimal
 import typing
 import uuid
 
@@ -42,6 +43,27 @@ class AccountRepository(typing.Protocol):
 
         :param account_id: UUID of the account
         :return: True if the account exists, False otherwise
+        """
+        ...
+
+    async def get_with_balance(
+        self, account_id: uuid.UUID
+    ) -> tuple[models.Account, decimal.Decimal] | None:
+        """
+        Retrieve an account with its computed balance via SQL aggregation.
+
+        :param account_id: UUID of the account
+        :return: tuple of (account, balance), or None if not found
+        """
+        ...
+
+    async def get_all_with_balances(
+        self,
+    ) -> list[tuple[models.Account, decimal.Decimal]]:
+        """
+        Retrieve all accounts with their computed balances via SQL aggregation.
+
+        :return: list of (account, balance) tuples
         """
         ...
 

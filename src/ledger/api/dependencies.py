@@ -64,21 +64,15 @@ def get_account_service(
         account_repo.SqlaAccountRepository,
         fastapi.Depends(get_account_repository),
     ],
-    transaction_repository: typing.Annotated[
-        transaction_repo.SqlaTransactionRepository,
-        fastapi.Depends(get_transaction_repository),
-    ],
 ) -> account_service.AccountService:
     """
     Build an account service wired with repositories.
 
     :param account_repository: account repository instance
-    :param transaction_repository: transaction repository instance
     :return: account service instance
     """
     return account_service.AccountService(
         account_repo=account_repository,
-        transaction_repo=transaction_repository,
     )
 
 
