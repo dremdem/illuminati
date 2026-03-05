@@ -50,30 +50,36 @@ We use **SQL aggregation** for balance computation at the repository layer, with
 
 ## Implementation
 
-The SQL query pattern:
+The SQL query pattern (column names match the ORM: `account_type`, `entry_type`):
 
 ```sql
 SELECT
     a.id,
     a.name,
-    a.type,
+    a.account_type,
     COALESCE(
         CASE
-            WHEN a.type IN ('ASSET', 'EXPENSE')
-            THEN SUM(CASE WHEN te.type = 'DEBIT' THEN te.amount ELSE 0 END)
-               - SUM(CASE WHEN te.type = 'CREDIT' THEN te.amount ELSE 0 END)
+            WHEN a.account_type IN ('ASSET', 'EXPENSE')
+            THEN SUM(CASE WHEN te.entry_type = 'DEBIT' THEN te.amount ELSE 0 END)
+               - SUM(CASE WHEN te.entry_type = 'CREDIT' THEN te.amount ELSE 0 END)
             ELSE
-                 SUM(CASE WHEN te.type = 'CREDIT' THEN te.amount ELSE 0 END)
-               - SUM(CASE WHEN te.type = 'DEBIT' THEN te.amount ELSE 0 END)
+                 SUM(CASE WHEN te.entry_type = 'CREDIT' THEN te.amount ELSE 0 END)
+               - SUM(CASE WHEN te.entry_type = 'DEBIT' THEN te.amount ELSE 0 END)
         END,
         0
     ) AS balance
 FROM accounts a
 LEFT JOIN transaction_entries te ON te.account_id = a.id
-GROUP BY a.id, a.name, a.type;
+GROUP BY a.id, a.name, a.account_type;
 ```
 
 The `LEFT JOIN` ensures accounts with no entries return a balance of `0`. The `COALESCE` handles NULL from empty aggregations.
+
+This is implemented in `SqlaAccountRepository` via two methods:
+- `get_with_balance(account_id)` -- single account with balance
+- `get_all_with_balances()` -- all accounts with balances in one query
+
+`AccountService` depends **only** on `AccountRepository` (not `TransactionRepository`), delegating all balance computation to the repository layer.
 
 ## Consequences
 
