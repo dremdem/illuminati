@@ -7,6 +7,7 @@
 - [TDD Workflow](#tdd-workflow)
 - [Running Tests](#running-tests)
 - [Database Migrations](#database-migrations)
+- [Database Management](#database-management)
 - [Code Quality](#code-quality)
 - [Project Conventions](#project-conventions)
 - [Related Documents](#related-documents)
@@ -173,11 +174,11 @@ make test
 Migrations use Alembic and run inside Docker.
 
 ```bash
-# Generate a new migration (after changing ORM models)
-docker compose run --rm app alembic revision --autogenerate -m "description"
-
 # Apply all pending migrations
-docker compose run --rm app alembic upgrade head
+make db-migrate
+
+# Generate a new migration (after changing ORM models)
+make db-revision msg="add user table"
 
 # Rollback one migration
 docker compose run --rm app alembic downgrade -1
@@ -190,6 +191,22 @@ docker compose run --rm app alembic history
 ```
 
 Alembic reads `DATABASE_URL` from the environment. See [Project Setup: Configuration Files](./project-setup.md#configuration-files).
+
+## Database Management
+
+```bash
+# Open psql shell in the running Postgres container
+make db-shell
+
+# Reset database (drop all data, re-run migrations -- asks for confirmation)
+make db-reset
+
+# Backup database to a timestamped SQL file
+make db-dump
+
+# Restore from a backup file
+make db-restore file=dump_20260305_120000.sql
+```
 
 ## Code Quality
 
