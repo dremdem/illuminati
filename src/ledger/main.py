@@ -5,6 +5,7 @@ import contextlib
 import os
 
 import fastapi
+import fastapi.middleware.cors as cors_middleware
 
 import ledger.api.exception_handlers as exception_handlers
 import ledger.api.routers.accounts as accounts_router
@@ -43,6 +44,17 @@ def create_app() -> fastapi.FastAPI:
         description="Double-entry bookkeeping financial ledger system",
         version="0.1.0",
         lifespan=lifespan,
+    )
+
+    cors_origins = os.environ.get(
+        "CORS_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    )
+    app.add_middleware(
+        cors_middleware.CORSMiddleware,
+        allow_origins=[o.strip() for o in cors_origins.split(",") if o.strip()],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     exception_handlers.register_exception_handlers(app)

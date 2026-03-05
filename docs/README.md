@@ -23,7 +23,7 @@ See the top-level [README](../README.md) for quick-start instructions, API usage
 | Document | Description |
 |---|---|
 | [Domain Model](./domain-model.md) | Entities (Account, Transaction, TransactionEntry), balance calculation rules, validation rules, worked examples |
-| [API Specification](./api-specification.md) | All 6 REST endpoints with request/response contracts, status codes, curl examples, error matrix |
+| [API Specification](./api-specification.md) | All 7 REST endpoints with request/response contracts, paginated envelopes, CORS config, status codes, curl examples, error matrix |
 | [Use Cases](./use-cases.md) | 3 multi-step business scenarios with seed data, JSON payloads, and expected balances |
 
 ## Development

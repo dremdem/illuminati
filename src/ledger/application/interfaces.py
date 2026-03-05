@@ -62,13 +62,13 @@ class AccountRepository(typing.Protocol):
         self,
         limit: int | None = None,
         offset: int = 0,
-    ) -> list[tuple[models.Account, decimal.Decimal]]:
+    ) -> tuple[list[tuple[models.Account, decimal.Decimal]], int]:
         """
         Retrieve all accounts with their computed balances via SQL aggregation.
 
         :param limit: maximum number of accounts to return (None = all)
         :param offset: number of accounts to skip
-        :return: list of (account, balance) tuples
+        :return: tuple of (list of (account, balance) tuples, total count)
         """
         ...
 
@@ -101,7 +101,7 @@ class TransactionRepository(typing.Protocol):
         offset: int = 0,
         from_date: datetime.datetime | None = None,
         to_date: datetime.datetime | None = None,
-    ) -> list[models.Transaction]:
+    ) -> tuple[list[models.Transaction], int]:
         """
         Retrieve transactions that have at least one entry for the given account.
 
@@ -113,6 +113,24 @@ class TransactionRepository(typing.Protocol):
         :param offset: number of transactions to skip
         :param from_date: inclusive lower bound on transaction timestamp
         :param to_date: inclusive upper bound on transaction timestamp
-        :return: list of transactions involving the account
+        :return: tuple of (list of transactions, total count)
+        """
+        ...
+
+    async def get_all(
+        self,
+        limit: int | None = None,
+        offset: int = 0,
+        from_date: datetime.datetime | None = None,
+        to_date: datetime.datetime | None = None,
+    ) -> tuple[list[models.Transaction], int]:
+        """
+        Retrieve all transactions with optional pagination and date filtering.
+
+        :param limit: maximum number of transactions to return (None = all)
+        :param offset: number of transactions to skip
+        :param from_date: inclusive lower bound on transaction timestamp
+        :param to_date: inclusive upper bound on transaction timestamp
+        :return: tuple of (list of transactions, total count)
         """
         ...

@@ -122,14 +122,19 @@ class SqlaAccountRepository:
         self,
         limit: int | None = None,
         offset: int = 0,
-    ) -> list[tuple[models.Account, decimal.Decimal]]:
+    ) -> tuple[list[tuple[models.Account, decimal.Decimal]], int]:
         """
         Retrieve all accounts with their computed balances via SQL aggregation.
 
         :param limit: maximum number of accounts to return (None = all)
         :param offset: number of accounts to skip
-        :return: list of (account, balance) tuples
+        :return: tuple of (list of (account, balance) tuples, total count)
         """
+        count_result = await self._session.execute(
+            sa.select(sa.func.count()).select_from(orm_models.AccountModel)
+        )
+        total = count_result.scalar_one()
+
         stmt = (
             sa.select(
                 orm_models.AccountModel.id,
@@ -153,7 +158,7 @@ class SqlaAccountRepository:
         if limit is not None:
             stmt = stmt.limit(limit)
         result = await self._session.execute(stmt)
-        return [
+        items = [
             (
                 models.Account(
                     id=row.id,
@@ -164,6 +169,7 @@ class SqlaAccountRepository:
             )
             for row in result.all()
         ]
+        return items, total
 
     @staticmethod
     def _balance_expression() -> sa.Label[decimal.Decimal]:

@@ -92,3 +92,33 @@ class TransactionResponse(pydantic.BaseModel):
     entries: list[TransactionEntryResponse] = pydantic.Field(
         description="All debit and credit entries for this transaction."
     )
+
+
+class PaginatedAccountResponse(pydantic.BaseModel):
+    """Paginated envelope for account list responses."""
+
+    items: list[AccountResponse] = pydantic.Field(
+        description="Page of account results."
+    )
+    total: int = pydantic.Field(
+        description="Total number of accounts (ignoring limit/offset)."
+    )
+    limit: int | None = pydantic.Field(
+        description="Maximum number of items requested (None = all)."
+    )
+    offset: int = pydantic.Field(description="Number of items skipped.")
+
+
+class PaginatedTransactionResponse(pydantic.BaseModel):
+    """Paginated envelope for transaction list responses."""
+
+    items: list[TransactionResponse] = pydantic.Field(
+        description="Page of transaction results."
+    )
+    total: int = pydantic.Field(
+        description="Total number of transactions (ignoring limit/offset)."
+    )
+    limit: int | None = pydantic.Field(
+        description="Maximum number of items requested (None = all)."
+    )
+    offset: int = pydantic.Field(description="Number of items skipped.")

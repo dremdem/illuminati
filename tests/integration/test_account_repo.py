@@ -145,16 +145,17 @@ class TestAccountRepoPagination:
     async def test_limit_restricts_result_count(
         self, db_session: sa_async.AsyncSession
     ) -> None:
-        """get_all_with_balances with limit=2 returns at most 2 accounts."""
+        """get_all_with_balances with limit=2 returns at most 2 items."""
         repo = account_repo_mod.SqlaAccountRepository(db_session)
         for name in ["Alpha", "Bravo", "Charlie"]:
             await repo.create(
                 models.Account(id=uuid.uuid4(), name=name, type=enums.AccountType.ASSET)
             )
 
-        result = await repo.get_all_with_balances(limit=2)
+        items, total = await repo.get_all_with_balances(limit=2)
 
-        assert len(result) == 2
+        assert len(items) == 2
+        assert total == 3
 
     async def test_offset_skips_rows(self, db_session: sa_async.AsyncSession) -> None:
         """offset=1 skips first account (ordered by name)."""
@@ -164,11 +165,12 @@ class TestAccountRepoPagination:
                 models.Account(id=uuid.uuid4(), name=name, type=enums.AccountType.ASSET)
             )
 
-        result = await repo.get_all_with_balances(offset=1)
+        items, total = await repo.get_all_with_balances(offset=1)
 
-        names = [account.name for account, _ in result]
+        names = [account.name for account, _ in items]
         assert "Alpha" not in names
         assert len(names) == 2
+        assert total == 3
 
     async def test_no_limit_returns_all(
         self, db_session: sa_async.AsyncSession
@@ -180,6 +182,22 @@ class TestAccountRepoPagination:
                 models.Account(id=uuid.uuid4(), name=name, type=enums.AccountType.ASSET)
             )
 
-        result = await repo.get_all_with_balances()
+        items, total = await repo.get_all_with_balances()
 
-        assert len(result) == 3
+        assert len(items) == 3
+        assert total == 3
+
+    async def test_total_reflects_full_count(
+        self, db_session: sa_async.AsyncSession
+    ) -> None:
+        """total reflects full count regardless of limit/offset."""
+        repo = account_repo_mod.SqlaAccountRepository(db_session)
+        for name in ["Alpha", "Bravo", "Charlie", "Delta", "Echo"]:
+            await repo.create(
+                models.Account(id=uuid.uuid4(), name=name, type=enums.AccountType.ASSET)
+            )
+
+        items, total = await repo.get_all_with_balances(limit=2, offset=1)
+
+        assert len(items) == 2
+        assert total == 5
