@@ -24,7 +24,7 @@ def upgrade() -> None:
         "accounts",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("account_type", sa.String(), nullable=False),
+        sa.Column("type", sa.String(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -32,8 +32,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "account_type IN ('ASSET', 'LIABILITY', 'REVENUE', 'EXPENSE')",
-            name="ck_accounts_account_type",
+            "type IN ('ASSET', 'LIABILITY', 'REVENUE', 'EXPENSE')",
+            name="ck_accounts_type",
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
@@ -66,11 +66,11 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("transaction_id", sa.Uuid(), nullable=False),
         sa.Column("account_id", sa.Uuid(), nullable=False),
-        sa.Column("entry_type", sa.String(), nullable=False),
+        sa.Column("type", sa.String(), nullable=False),
         sa.Column("amount", sa.Numeric(), nullable=False),
         sa.CheckConstraint(
-            "entry_type IN ('DEBIT', 'CREDIT')",
-            name="ck_transaction_entries_entry_type",
+            "type IN ('DEBIT', 'CREDIT')",
+            name="ck_transaction_entries_type",
         ),
         sa.CheckConstraint(
             "amount > 0",

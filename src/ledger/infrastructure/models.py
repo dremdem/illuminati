@@ -30,6 +30,7 @@ class AccountModel(database.Base):
         nullable=False,
     )
     account_type: orm.Mapped[str] = orm.mapped_column(
+        "type",
         sa.String,
         nullable=False,
     )
@@ -41,8 +42,8 @@ class AccountModel(database.Base):
 
     __table_args__ = (
         sa.CheckConstraint(
-            sa.column("account_type").in_(ACCOUNT_TYPE_VALUES),
-            name="ck_accounts_account_type",
+            sa.column("type").in_(ACCOUNT_TYPE_VALUES),
+            name="ck_accounts_type",
         ),
     )
 
@@ -100,6 +101,7 @@ class TransactionEntryModel(database.Base):
         index=True,
     )
     entry_type: orm.Mapped[str] = orm.mapped_column(
+        "type",
         sa.String,
         nullable=False,
     )
@@ -114,8 +116,8 @@ class TransactionEntryModel(database.Base):
 
     __table_args__ = (
         sa.CheckConstraint(
-            sa.column("entry_type").in_(ENTRY_TYPE_VALUES),
-            name="ck_transaction_entries_entry_type",
+            sa.column("type").in_(ENTRY_TYPE_VALUES),
+            name="ck_transaction_entries_type",
         ),
         sa.CheckConstraint(
             sa.column("amount") > 0,

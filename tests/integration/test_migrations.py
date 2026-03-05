@@ -6,6 +6,8 @@ import sqlalchemy as sa
 import sqlalchemy.engine as sa_engine
 import testcontainers.postgres
 
+import ledger.infrastructure.models as orm_models
+
 
 def _make_alembic_config(sync_url: str) -> alembic.config.Config:
     """
@@ -84,7 +86,7 @@ class TestMigrations:
             account_cols = _get_table_columns(engine, "accounts")
             assert "id" in account_cols
             assert "name" in account_cols
-            assert "account_type" in account_cols
+            assert "type" in account_cols
             assert "created_at" in account_cols
 
             txn_cols = _get_table_columns(engine, "transactions")
@@ -97,7 +99,7 @@ class TestMigrations:
             assert "id" in entry_cols
             assert "transaction_id" in entry_cols
             assert "account_id" in entry_cols
-            assert "entry_type" in entry_cols
+            assert "type" in entry_cols
             assert "amount" in entry_cols
 
             engine.dispose()
@@ -117,5 +119,33 @@ class TestMigrations:
             entry_indexes = _get_indexes(engine, "transaction_entries")
             assert "transaction_id" in entry_indexes
             assert "account_id" in entry_indexes
+
+            engine.dispose()
+
+    def test_orm_columns_match_migration_schema(self) -> None:
+        """ORM model column names must match the DB columns created by migrations.
+
+        This catches drift between the ORM model and the migration (and
+        therefore the production database).  Without this test, the ORM
+        can silently generate SQL referencing columns that do not exist.
+        """
+        with testcontainers.postgres.PostgresContainer("postgres:16-alpine") as pg:
+            url = pg.get_connection_url()
+            cfg = _make_alembic_config(url)
+            alembic.command.upgrade(cfg, "head")
+
+            engine = sa.create_engine(url)
+
+            for model_cls in (
+                orm_models.AccountModel,
+                orm_models.TransactionModel,
+                orm_models.TransactionEntryModel,
+            ):
+                table_name = model_cls.__tablename__
+                db_cols = set(_get_table_columns(engine, table_name))
+                orm_cols = {c.name for c in model_cls.__table__.columns}
+                assert orm_cols == db_cols, (
+                    f"{table_name}: ORM columns {orm_cols} != DB columns {db_cols}"
+                )
 
             engine.dispose()
