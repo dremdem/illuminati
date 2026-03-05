@@ -84,7 +84,7 @@ cd illuminati
 docker compose up -d
 ```
 
-The app starts at `http://localhost:8000`. Database migrations run automatically on first startup.
+The API starts at `http://localhost:8000` and the frontend at `http://localhost:3000`. Database migrations run automatically on first startup.
 
 Verify it works:
 
