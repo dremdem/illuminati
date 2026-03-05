@@ -1,10 +1,15 @@
 # Documentation
 
 ## Table of Contents
+- [Getting Started](#getting-started)
 - [Architecture & Design](#architecture--design)
 - [API & Domain](#api--domain)
 - [Development](#development)
 - [Architecture Decision Records](#architecture-decision-records)
+
+## Getting Started
+
+See the top-level [README](../README.md) for quick-start instructions, API usage examples, and project overview.
 
 ## Architecture & Design
 
