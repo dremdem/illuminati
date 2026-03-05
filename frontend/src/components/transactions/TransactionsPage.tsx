@@ -6,8 +6,9 @@ import TransactionJournal from "./TransactionJournal";
 import AddTransactionModal from "./AddTransactionModal";
 import Pagination from "../Pagination";
 import type { AccountResponse } from "../../types/api";
+import { DEFAULT_PAGE_SIZE } from "../../config";
 
-const LIMIT = 10;
+type SortOrder = "asc" | "desc";
 
 export default function TransactionsPage() {
   const [offset, setOffset] = useState(0);
@@ -15,9 +16,10 @@ export default function TransactionsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [dateSortOrder, setDateSortOrder] = useState<SortOrder>("asc");
 
   const { data, isLoading, isError } = useTransactions(
-    LIMIT,
+    DEFAULT_PAGE_SIZE,
     offset,
     accountId || undefined,
     startDate || undefined,
@@ -34,6 +36,21 @@ export default function TransactionsPage() {
     }
     return map;
   }, [allAccounts.data]);
+
+  const sortedTransactions = useMemo(() => {
+    if (!data) return [];
+    const items = [...data.items];
+    items.sort((a, b) => {
+      const diff =
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      if (dateSortOrder === "desc") {
+        return -diff;
+      } else {
+        return diff;
+      }
+    });
+    return items;
+  }, [data, dateSortOrder]);
 
   function handleFilterChange(setter: (v: string) => void) {
     return (value: string) => {
@@ -73,12 +90,16 @@ export default function TransactionsPage() {
       {data && (
         <div className="bg-white rounded-lg shadow p-4">
           <TransactionJournal
-            transactions={data.items}
+            transactions={sortedTransactions}
             accountMap={accountMap}
+            dateSortOrder={dateSortOrder}
+            onDateSortToggle={() =>
+              setDateSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
           />
           <Pagination
             total={data.total}
-            limit={LIMIT}
+            limit={DEFAULT_PAGE_SIZE}
             offset={offset}
             onOffsetChange={setOffset}
           />

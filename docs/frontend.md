@@ -56,6 +56,7 @@ graph TD
 frontend/src/
 ├── main.tsx                    # QueryClientProvider + RouterProvider
 ├── index.css                   # @import "tailwindcss"
+├── config.ts                   # Shared constants (DEFAULT_PAGE_SIZE)
 ├── router.tsx                  # createBrowserRouter
 ├── types/
 │   └── api.ts                  # TS interfaces matching API responses
@@ -91,7 +92,7 @@ sequenceDiagram
 
     C->>H: useAccounts(limit, offset)
     H->>A: fetchAccounts(limit, offset)
-    A->>S: GET /api/accounts?limit=10&offset=0
+    A->>S: GET /api/accounts?limit=5&offset=0
     S-->>A: PaginatedResponse<AccountResponse>
     A-->>H: typed data
     H-->>C: { data, isLoading, isError }
@@ -108,7 +109,8 @@ Key patterns:
 - **TanStack Query** handles caching, refetching, and loading states
 - **`useAllAccounts()`** provides a lookup map for resolving account names in transaction entries
 - Mutations invalidate related queries to keep data fresh
-- Pagination uses `useState` for offset, hardcoded limit of 10
+- Pagination uses `useState` for offset, default page size of 5 (configurable in `config.ts`)
+- **Client-side date sorting** on the Transactions journal — click the "Date" column header to toggle ascending/descending order (backend returns ascending; descending is reversed client-side within the current page)
 
 ## Development Workflow
 

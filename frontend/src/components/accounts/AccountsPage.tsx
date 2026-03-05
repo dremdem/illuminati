@@ -4,14 +4,13 @@ import AccountsTable from "./AccountsTable";
 import AccountsSidebar from "./AccountsSidebar";
 import AddAccountModal from "./AddAccountModal";
 import Pagination from "../Pagination";
-
-const LIMIT = 10;
+import { DEFAULT_PAGE_SIZE } from "../../config";
 
 export default function AccountsPage() {
   const [offset, setOffset] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { data, isLoading, isError } = useAccounts(LIMIT, offset);
+  const { data, isLoading, isError } = useAccounts(DEFAULT_PAGE_SIZE, offset);
   const allAccounts = useAllAccounts();
 
   if (isLoading) return <p className="text-gray-500">Loading accounts…</p>;
@@ -33,7 +32,7 @@ export default function AccountsPage() {
           <AccountsTable accounts={data!.items} />
           <Pagination
             total={data!.total}
-            limit={LIMIT}
+            limit={DEFAULT_PAGE_SIZE}
             offset={offset}
             onOffsetChange={setOffset}
           />

@@ -4,11 +4,15 @@ import type { TransactionResponse, AccountResponse } from "../../types/api";
 interface TransactionJournalProps {
   transactions: TransactionResponse[];
   accountMap: Map<string, AccountResponse>;
+  dateSortOrder: "asc" | "desc";
+  onDateSortToggle: () => void;
 }
 
 export default function TransactionJournal({
   transactions,
   accountMap,
+  dateSortOrder,
+  onDateSortToggle,
 }: TransactionJournalProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -29,7 +33,12 @@ export default function TransactionJournal({
       <thead>
         <tr className="border-b text-left text-gray-500">
           <th className="py-2 w-8"></th>
-          <th className="py-2 font-medium">Date</th>
+          <th
+            className="py-2 font-medium cursor-pointer select-none hover:text-gray-700"
+            onClick={onDateSortToggle}
+          >
+            Date {dateSortOrder === "asc" ? "▲" : "▼"}
+          </th>
           <th className="py-2 font-medium">Description</th>
           <th className="py-2 font-medium text-right">Entries</th>
         </tr>
