@@ -32,6 +32,12 @@ See the top-level [README](../README.md) for quick-start instructions, API usage
 |---|---|
 | [Frontend](./frontend.md) | React SPA architecture, component hierarchy, dev workflow, Docker integration |
 
+## Testing
+
+| Document | Description |
+|---|---|
+| [Manual Test Scenarios](./manual-test-scenarios.md) | Step-by-step curl-based test cases covering all endpoints, validation rules, balance calculation, and error handling |
+
 ## Development
 
 | Document | Description |
