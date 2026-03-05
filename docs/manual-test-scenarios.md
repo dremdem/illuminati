@@ -111,6 +111,21 @@ echo "→ SUPPLIES_ID=$SUPPLIES_ID"
 
 Expected: **HTTP 201** with `balance: "0.00"`.
 
+Create a liability account to fund Cash via a bank loan:
+
+```bash
+response=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/accounts \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Bank Loan", "type": "LIABILITY"}')
+body=$(echo "$response" | sed \$d)
+echo "$body" | jq .
+echo "→ HTTP $(echo "$response" | tail -1)"
+BANK_LOAN_ID=$(echo "$body" | jq -r '.id')
+echo "→ BANK_LOAN_ID=$BANK_LOAN_ID"
+```
+
+Expected: **HTTP 201** with `balance: "0.00"`.
+
 ### 1.2 Create Account — Duplicate Name (409)
 
 ```bash
@@ -191,23 +206,46 @@ Expected: **HTTP 200**. Paginated envelope:
 {
   "items": [
     {"id": "...", "name": "Cash", "type": "ASSET", "balance": "0.00"},
-    {"id": "...", "name": "Office Supplies", "type": "EXPENSE", "balance": "0.00"}
+    {"id": "...", "name": "Office Supplies", "type": "EXPENSE", "balance": "0.00"},
+    {"id": "...", "name": "Bank Loan", "type": "LIABILITY", "balance": "0.00"}
   ],
-  "total": 2,
+  "total": 3,
   "limit": null,
   "offset": 0
 }
 ```
 
-Both accounts from steps above should be present with `balance: "0.00"`.
+All three accounts from steps above should be present with `balance: "0.00"`.
 
 ---
 
 ## 2. Transaction Processing
 
-These tests use `CASH_ID` and `SUPPLIES_ID` from [section 1](#1-account-management).
+These tests use `CASH_ID`, `SUPPLIES_ID`, and `BANK_LOAN_ID` from [section 1](#1-account-management).
 
 ### 2.1 Create Transaction — Success
+
+First, fund the Cash account with a bank loan (DR Cash, CR Bank Loan):
+
+```bash
+response=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/transactions \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"description\": \"Bank loan received\",
+    \"date\": \"2026-03-01T09:00:00Z\",
+    \"entries\": [
+      {\"accountId\": \"$CASH_ID\", \"type\": \"DEBIT\", \"amount\": 1000.00},
+      {\"accountId\": \"$BANK_LOAN_ID\", \"type\": \"CREDIT\", \"amount\": 1000.00}
+    ]
+  }")
+body=$(echo "$response" | sed \$d)
+echo "$body" | jq .
+echo "→ HTTP $(echo "$response" | tail -1)"
+```
+
+Expected: **HTTP 201**. Cash balance is now `1000.00`.
+
+Now spend some of that cash on supplies (DR Supplies, CR Cash):
 
 ```bash
 response=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/transactions \
@@ -229,19 +267,25 @@ echo "→ TXN_ID=$TXN_ID"
 
 Expected: **HTTP 201**. Response contains `id`, `description`, `timestamp`, and `entries` array with 2 items.
 
-After this transaction, verify balances updated:
+Verify balances after both transactions:
 
 ```bash
 curl -s "http://localhost:8000/api/accounts/$CASH_ID" | jq '{name, balance}'
 ```
 
-Expected: `"balance": "-100.00"` — ASSET accounts: balance = debits - credits. Cash had 0 debits and 100 credits, so balance = -100.00. This is correct — cash decreased.
+Expected: `"balance": "900.00"` — ASSET account: balance = debits - credits = 1000 - 100 = 900.00.
 
 ```bash
 curl -s "http://localhost:8000/api/accounts/$SUPPLIES_ID" | jq '{name, balance}'
 ```
 
 Expected: `"balance": "100.00"` — EXPENSE account: balance = debits - credits = 100 - 0 = 100.00.
+
+```bash
+curl -s "http://localhost:8000/api/accounts/$BANK_LOAN_ID" | jq '{name, balance}'
+```
+
+Expected: `"balance": "1000.00"` — LIABILITY account: balance = credits - debits = 1000 - 0 = 1000.00.
 
 ### 2.2 Fewer Than 2 Entries (400)
 
