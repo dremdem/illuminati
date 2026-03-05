@@ -20,7 +20,7 @@ typecheck:
 	docker compose run --rm --no-deps app mypy src/
 
 test:
-	docker compose run --rm app pytest -v
+	docker compose run --rm --user root app pytest -v
 
 check: lint typecheck test
 

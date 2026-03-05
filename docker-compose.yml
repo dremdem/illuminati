@@ -29,6 +29,8 @@ services:
       - ./src:/app/src
       - ./tests:/app/tests
       - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+      - ./entrypoint.sh:/app/entrypoint.sh
       - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
