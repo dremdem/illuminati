@@ -124,6 +124,17 @@ make down
 
 Use `docker compose run --rm app <command>` to run commands inside the container.
 
+### Database Management
+
+```bash
+make db-migrate                            # Apply pending migrations
+make db-revision msg="add user table"      # Generate new migration
+make db-shell                              # Open psql in Postgres container
+make db-reset                              # Drop all data + re-migrate (confirms first)
+make db-dump                               # Backup to timestamped .sql file
+make db-restore file=dump_20260305.sql     # Restore from backup
+```
+
 ## Running Tests
 
 Tests use testcontainers to spin up an isolated PostgreSQL instance per session:

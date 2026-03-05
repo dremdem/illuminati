@@ -227,6 +227,13 @@ The runner waits for the health check to pass before running tests. `DATABASE_UR
 | `make test` | `pytest -v` | Requires DB |
 | `make check` | lint + typecheck + test | Full validation |
 | `make run` | Start uvicorn directly | `--no-deps` |
+| `make seed-data` | Load sample accounts + transactions | Requires DB |
+| `make db-reset` | Downgrade + re-migrate (with confirmation) | **Destructive** |
+| `make db-migrate` | `alembic upgrade head` | Apply pending migrations |
+| `make db-revision` | `alembic revision --autogenerate` | Pass `msg=` |
+| `make db-shell` | `psql` inside Postgres container | Interactive |
+| `make db-dump` | `pg_dump` to timestamped `.sql` file | Backup |
+| `make db-restore` | Restore from `.sql` file | Pass `file=` |
 
 ## Configuration Files
 
