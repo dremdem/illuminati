@@ -75,11 +75,13 @@ Expected: `200`
 ### 1.1 Create Account — Success
 
 ```bash
-response=$(curl -s -X POST http://localhost:8000/api/accounts \
+response=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/accounts \
   -H "Content-Type: application/json" \
   -d '{"name": "Cash", "type": "ASSET"}')
-echo "$response" | jq .
-CASH_ID=$(echo "$response" | jq -r '.id')
+body=$(echo "$response" | sed \$d)
+echo "$body" | jq .
+echo "→ HTTP $(echo "$response" | tail -1)"
+CASH_ID=$(echo "$body" | jq -r '.id')
 echo "→ CASH_ID=$CASH_ID"
 ```
 
@@ -97,11 +99,13 @@ Expected: **HTTP 201**. Response body:
 Create a second account for transaction tests:
 
 ```bash
-response=$(curl -s -X POST http://localhost:8000/api/accounts \
+response=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/accounts \
   -H "Content-Type: application/json" \
   -d '{"name": "Office Supplies", "type": "EXPENSE"}')
-echo "$response" | jq .
-SUPPLIES_ID=$(echo "$response" | jq -r '.id')
+body=$(echo "$response" | sed \$d)
+echo "$body" | jq .
+echo "→ HTTP $(echo "$response" | tail -1)"
+SUPPLIES_ID=$(echo "$body" | jq -r '.id')
 echo "→ SUPPLIES_ID=$SUPPLIES_ID"
 ```
 
@@ -206,7 +210,7 @@ These tests use `CASH_ID` and `SUPPLIES_ID` from [section 1](#1-account-manageme
 ### 2.1 Create Transaction — Success
 
 ```bash
-response=$(curl -s -X POST http://localhost:8000/api/transactions \
+response=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/transactions \
   -H "Content-Type: application/json" \
   -d "{
     \"description\": \"Buy supplies with cash\",
@@ -216,8 +220,10 @@ response=$(curl -s -X POST http://localhost:8000/api/transactions \
       {\"accountId\": \"$CASH_ID\", \"type\": \"CREDIT\", \"amount\": 100.00}
     ]
   }")
-echo "$response" | jq .
-TXN_ID=$(echo "$response" | jq -r '.id')
+body=$(echo "$response" | sed \$d)
+echo "$body" | jq .
+echo "→ HTTP $(echo "$response" | tail -1)"
+TXN_ID=$(echo "$body" | jq -r '.id')
 echo "→ TXN_ID=$TXN_ID"
 ```
 
@@ -560,7 +566,7 @@ echo "→ REVENUE_ID=$REVENUE_ID"
 Create the transaction:
 
 ```bash
-response=$(curl -s -X POST http://localhost:8000/api/transactions \
+response=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/transactions \
   -H "Content-Type: application/json" \
   -d "{
     \"description\": \"Additional revenue collected\",
@@ -570,8 +576,10 @@ response=$(curl -s -X POST http://localhost:8000/api/transactions \
       {\"accountId\": \"$REVENUE_ID\", \"type\": \"CREDIT\", \"amount\": 50.00}
     ]
   }")
-echo "$response" | jq .
-TXN_ID=$(echo "$response" | jq -r '.id')
+body=$(echo "$response" | sed \$d)
+echo "$body" | jq .
+echo "→ HTTP $(echo "$response" | tail -1)"
+TXN_ID=$(echo "$body" | jq -r '.id')
 echo "→ TXN_ID=$TXN_ID"
 ```
 
