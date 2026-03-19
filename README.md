@@ -271,7 +271,7 @@ src/ledger/
 
 ## What Could Be Improved
 
-- **Pagination** -- list endpoints return all records; add cursor-based pagination
+- **Pagination** -- list endpoints support offset-based pagination; consider upgrading to cursor-based for large datasets
 - **Authentication** -- no auth layer; add JWT or API key middleware
 - **Audit trail** -- soft deletes + updated_at timestamps for compliance
 - **Rate limiting** -- protect against abuse with request throttling
