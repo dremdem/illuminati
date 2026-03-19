@@ -70,7 +70,6 @@ graph TB
 | Balance computation | SQL aggregation (`SUM` with `CASE`) | No N+1 queries, constant memory, always consistent |
 | Dependency management | uv | 10-50x faster than pip/Poetry, lockfile, Docker-friendly |
 | Testing strategy | Testcontainers (real PostgreSQL) | No mocks for DB; tests catch real SQL issues |
-| Import style | `import module` (no `from` imports) | Explicit namespaces, fewer merge conflicts |
 
 See [Architecture Decision Records](docs/README.md#architecture-decision-records) for full rationale.
 
