@@ -231,6 +231,7 @@ The runner waits for the health check to pass before running tests. `DATABASE_UR
 
 | Target | Command | Notes |
 |---|---|---|
+| `make help` | Lists all targets with descriptions | Quick reference |
 | `make up` | `docker compose up -d` | Start all services |
 | `make down` | `docker compose down` | Stop all services |
 | `make build` | `docker compose build` | Rebuild images |

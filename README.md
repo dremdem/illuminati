@@ -33,7 +33,7 @@ The system enforces double-entry bookkeeping rules: every transaction must have 
 - Automatic balance calculation with correct normal-balance semantics
 - Full validation of double-entry constraints before persisting
 - Alembic migrations applied automatically on startup
-- 99 tests (unit, integration, API) with real PostgreSQL via testcontainers
+- 132 tests (unit, integration, API) with real PostgreSQL via testcontainers
 
 ## Architecture
 
@@ -70,7 +70,6 @@ graph TB
 | Balance computation | SQL aggregation (`SUM` with `CASE`) | No N+1 queries, constant memory, always consistent |
 | Dependency management | uv | 10-50x faster than pip/Poetry, lockfile, Docker-friendly |
 | Testing strategy | Testcontainers (real PostgreSQL) | No mocks for DB; tests catch real SQL issues |
-| Import style | `import module` (no `from` imports) | Explicit namespaces, fewer merge conflicts |
 
 See [Architecture Decision Records](docs/README.md#architecture-decision-records) for full rationale.
 
@@ -81,7 +80,7 @@ See [Architecture Decision Records](docs/README.md#architecture-decision-records
 ```bash
 git clone <repo-url>
 cd illuminati
-docker compose up -d
+make up
 ```
 
 The API starts at `http://localhost:8000` and the frontend at `http://localhost:3000`. Database migrations run automatically on first startup.
@@ -104,12 +103,14 @@ This creates 10 accounts and 7 transactions covering common bookkeeping scenario
 Stop:
 
 ```bash
-docker compose down
+make down
 ```
 
 ## Local Development
 
 All dependencies live inside Docker -- no local venv required.
+
+Run `make help` to see all available targets with descriptions.
 
 ```bash
 # Build the image
@@ -270,7 +271,7 @@ src/ledger/
 
 ## What Could Be Improved
 
-- **Pagination** -- list endpoints return all records; add cursor-based pagination
+- **Pagination** -- list endpoints support offset-based pagination; consider upgrading to cursor-based for large datasets
 - **Authentication** -- no auth layer; add JWT or API key middleware
 - **Audit trail** -- soft deletes + updated_at timestamps for compliance
 - **Rate limiting** -- protect against abuse with request throttling
