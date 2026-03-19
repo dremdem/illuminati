@@ -111,6 +111,8 @@ docker compose down
 
 All dependencies live inside Docker -- no local venv required.
 
+Run `make help` to see all available targets with descriptions.
+
 ```bash
 # Build the image
 make build
