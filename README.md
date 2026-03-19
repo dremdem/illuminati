@@ -80,7 +80,7 @@ See [Architecture Decision Records](docs/README.md#architecture-decision-records
 ```bash
 git clone <repo-url>
 cd illuminati
-docker compose up -d
+make up
 ```
 
 The API starts at `http://localhost:8000` and the frontend at `http://localhost:3000`. Database migrations run automatically on first startup.
@@ -103,7 +103,7 @@ This creates 10 accounts and 7 transactions covering common bookkeeping scenario
 Stop:
 
 ```bash
-docker compose down
+make down
 ```
 
 ## Local Development
