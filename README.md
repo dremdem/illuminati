@@ -33,7 +33,7 @@ The system enforces double-entry bookkeeping rules: every transaction must have 
 - Automatic balance calculation with correct normal-balance semantics
 - Full validation of double-entry constraints before persisting
 - Alembic migrations applied automatically on startup
-- 99 tests (unit, integration, API) with real PostgreSQL via testcontainers
+- 132 tests (unit, integration, API) with real PostgreSQL via testcontainers
 
 ## Architecture
 
